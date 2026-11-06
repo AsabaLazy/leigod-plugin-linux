@@ -23,6 +23,7 @@ trap 'exit 1' HUP INT TERM
 
 install -d -m 0755 \
     "$PACKAGE_ROOT/opt/leigod/config" \
+    "$PACKAGE_ROOT/opt/leigod/webui" \
     "$PACKAGE_ROOT/scripts" \
     "$PACKAGE_ROOT/systemd"
 
@@ -30,9 +31,13 @@ LEIGOD_CHECKSUM_FILE=$CHECKSUM_FILE \
     sh "$REPO_DIR/scripts/fetch-assets.sh" "$PACKAGE_ROOT/opt/leigod"
 
 install -m 0755 "$REPO_DIR/opt/leigod/steamdeck_acc_monitor.sh" "$PACKAGE_ROOT/opt/leigod/"
+install -m 0755 "$REPO_DIR/opt/leigod/leigod_cleanup_net.sh" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0755 "$REPO_DIR/opt/leigod/leigod_uninstall.sh" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0755 "$REPO_DIR/scripts/device-mac.sh" "$PACKAGE_ROOT/scripts/"
 install -m 0755 "$REPO_DIR/scripts/fetch-assets.sh" "$PACKAGE_ROOT/scripts/"
+install -m 0755 "$REPO_DIR/opt/leigod/webui/webui.py" "$PACKAGE_ROOT/opt/leigod/webui/"
+install -m 0644 "$REPO_DIR/opt/leigod/webui/index.html" "$PACKAGE_ROOT/opt/leigod/webui/"
+install -m 0644 "$REPO_DIR/opt/leigod/webui/leigod-webui.desktop" "$PACKAGE_ROOT/opt/leigod/webui/"
 install -m 0644 "$REPO_DIR/opt/leigod/fake_os-release" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0644 "$REPO_DIR/opt/leigod/fake_product_name" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0644 "$REPO_DIR/opt/leigod/config/acc_version.ini" "$PACKAGE_ROOT/opt/leigod/config/"
@@ -46,6 +51,7 @@ install -m 0755 "$REPO_DIR/uninstall.sh" "$PACKAGE_ROOT/"
 install -m 0644 "$CHECKSUM_FILE" "$PACKAGE_ROOT/checksums.sha256"
 install -m 0644 "$REPO_DIR/release.env" "$PACKAGE_ROOT/"
 install -m 0644 "$REPO_DIR/systemd/leigod_plugin.service" "$PACKAGE_ROOT/systemd/"
+install -m 0644 "$REPO_DIR/systemd/leigod_webui.service" "$PACKAGE_ROOT/systemd/"
 install -m 0644 "$REPO_DIR/README.md" "$PACKAGE_ROOT/"
 install -m 0644 "$REPO_DIR/LICENSE" "$PACKAGE_ROOT/"
 install -m 0644 "$REPO_DIR/THIRD_PARTY_NOTICES.md" "$PACKAGE_ROOT/"

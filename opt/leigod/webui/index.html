@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- MANDATORY: Declare support for both light and dark themes -->
+  <meta name="color-scheme" content="light dark">
+  <title>Leigod Plugin Linux — 控制面板</title>
+  <style>
+    :root {
+      --bg-light: #f6f8fa;
+      --bg-dark: #0d1117;
+      --surface-light: #ffffff;
+      --surface-dark: #161b22;
+      --surface-alt-light: #f0f3f6;
+      --surface-alt-dark: #21262d;
+      --text-light: #1f2328;
+      --text-dark: #e6edf3;
+      --muted-light: #59636e;
+      --muted-dark: #8b949e;
+      --border-light: #d0d7de;
+      --border-dark: #30363d;
+      --brand-light: #0969da;
+      --brand-dark: #4493f8;
+      --ok-light: #1a7f37;
+      --ok-dark: #3fb950;
+      --warn-light: #9a6700;
+      --warn-dark: #d29922;
+      --err-light: #cf222e;
+      --err-dark: #f85149;
+
+      --bg: var(--bg-light);
+      --surface: var(--surface-light);
+      --surface-alt: var(--surface-alt-light);
+      --text: var(--text-light);
+      --muted: var(--muted-light);
+      --border: var(--border-light);
+      --brand: var(--brand-light);
+      --ok: var(--ok-light);
+      --warn: var(--warn-light);
+      --err: var(--err-light);
+
+      /* MANDATORY: Fallback for browsers without light-dark support */
+      @media (prefers-color-scheme: dark) {
+        --bg: var(--bg-dark);
+        --surface: var(--surface-dark);
+        --surface-alt: var(--surface-alt-dark);
+        --text: var(--text-dark);
+        --muted: var(--muted-dark);
+        --border: var(--border-dark);
+        --brand: var(--brand-dark);
+        --ok: var(--ok-dark);
+        --warn: var(--warn-dark);
+        --err: var(--err-dark);
+      }
+
+      @supports (color: light-dark(white, black)) {
+        --bg: light-dark(var(--bg-light), var(--bg-dark));
+        --surface: light-dark(var(--surface-light), var(--surface-dark));
+        --surface-alt: light-dark(var(--surface-alt-light), var(--surface-alt-dark));
+        --text: light-dark(var(--text-light), var(--text-dark));
+        --muted: light-dark(var(--muted-light), var(--muted-dark));
+        --border: light-dark(var(--border-light), var(--border-dark));
+        --brand: light-dark(var(--brand-light), var(--brand-dark));
+        --ok: light-dark(var(--ok-light), var(--ok-dark));
+        --warn: light-dark(var(--warn-light), var(--warn-dark));
+        --err: light-dark(var(--err-light), var(--err-dark));
+      }
+
+      /* MANDATORY: Apply color-scheme to :root for viewport-wide theming */
+      color-scheme: light dark;
+      accent-color: var(--brand);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.25rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    header h1 {
+      font-size: 1.15rem;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+    }
+    .badge.ok { color: var(--ok); border-color: var(--ok); }
+    .badge.warn { color: var(--warn); border-color: var(--warn); }
+    .badge.err { color: var(--err); border-color: var(--err); }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+    }
+
+    .card h2 {
+      font-size: 0.95rem;
+      margin: 0 0 0.75rem 0;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .stat-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    button, select, input, textarea {
+      font: inherit;
+      color: var(--text);
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.42rem 0.78rem;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 500;
+      transition: opacity 0.15s ease;
+    }
+
+    button:hover {
+      opacity: 0.88;
+    }
+
+    button.primary {
+      background: var(--brand);
+      color: #ffffff;
+      border-color: var(--brand);
+    }
+
+    button.danger {
+      color: var(--err);
+      border-color: var(--err);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .inline-check {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    /* Responsive Table per modern-web-guidance */
+    .table-wrapper {
+      overflow: auto;
+      max-inline-size: 100%;
+      max-block-size: min(420px, 70vh);
+      container-type: inline-size;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.88rem;
+      --label-1: "名称";
+      --label-2: "详情 / IP";
+      --label-3: "标识 / MAC";
+      --label-4: "分类";
+      --label-5: "状态 / 时间";
+      --label-6: "操作 / 区服";
+    }
+
+    caption {
+      text-align: start;
+      padding: 0.65rem 0.9rem;
+      font-weight: 600;
+      background: var(--surface-alt);
+      border-block-end: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 0.6rem 0.85rem;
+      text-align: start;
+      border-block-end: 1px solid var(--border);
+    }
+
+    thead {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 1;
+      background: var(--surface-alt);
+    }
+
+    tbody th {
+      position: sticky;
+      inset-inline-start: 0;
+      background: var(--surface);
+      font-weight: 600;
+    }
+
+    @container (width < 600px) {
+      table, thead, tbody, tr, th, td {
+        display: block;
+      }
+
+      thead {
+        /* MANDATORY: Hide column header from layout and screen readers. */
+        display: none;
+      }
+
+      tr {
+        margin-block-end: 0.75rem;
+        border-block-end: 2px solid var(--border);
+      }
+
+      tbody th {
+        position: sticky;
+        inset-block-start: 0;
+        z-index: 2;
+        background: var(--surface-alt);
+      }
+
+      td:nth-child(2)::before { content: var(--label-2) ": "; font-weight: 600; color: var(--muted); }
+      td:nth-child(3)::before { content: var(--label-3) ": "; font-weight: 600; color: var(--muted); }
+      td:nth-child(4)::before { content: var(--label-4) ": "; font-weight: 600; color: var(--muted); }
+      td:nth-child(5)::before { content: var(--label-5) ": "; font-weight: 600; color: var(--muted); }
+      td:nth-child(6)::before { content: var(--label-6) ": "; font-weight: 600; color: var(--muted); }
+    }
+
+    pre {
+      margin: 0;
+      padding: 0.85rem;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      max-height: 280px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>
+        <span>Leigod Plugin Linux 控制面板</span>
+        <span id="ws-badge" class="badge warn">WebSocket: 连接中...</span>
+        <span id="svc-badge" class="badge">systemd: 检测中...</span>
+      </h1>
+      <div class="btn-row">
+        <label class="inline-check">
+          <input type="checkbox" id="auto-poll" checked onchange="toggleAutoPoll()">
+          <span>每 2 秒自动刷新</span>
+        </label>
+        <button class="primary" onclick="refreshAll()">立即刷新</button>
+        <button onclick="runDiagnostics()">一键网络诊断</button>
+      </div>
+    </header>
+
+    <section class="grid-cards">
+      <div class="card">
+        <h2>设备身份 (SteamDeck 伪装)</h2>
+        <div class="stat-value" id="stat-model">SteamDeck / Jupiter</div>
+        <div class="stat-sub" id="stat-mac">虚拟 wlan0 MAC: -</div>
+        <div class="stat-sub" id="stat-sn">User ID: -</div>
+      </div>
+      <div class="card">
+        <h2>加速状态 & 隧道</h2>
+        <div class="stat-value" id="stat-acc">未获取</div>
+        <div class="stat-sub" id="stat-delay">延迟: - ms | 丢包: - %</div>
+        <div class="stat-sub" id="stat-tun">TUN 接口: -</div>
+      </div>
+      <div class="card">
+        <h2>实时速率 & 累计流量</h2>
+        <div class="stat-value" id="stat-speed">↓ 0 B/s | ↑ 0 B/s</div>
+        <div class="stat-sub" id="stat-traffic">累计: RX 0 B / TX 0 B</div>
+        <div class="stat-sub" id="stat-netstate">外网连通性: -</div>
+      </div>
+      <div class="card">
+        <h2>核心版本 & 防火墙状态</h2>
+        <div class="stat-value" id="stat-ver">-</div>
+        <div class="stat-sub" id="stat-udp6066">UDP 6066 发现: -</div>
+        <div class="stat-sub" id="stat-fw">GAMEACC 规则链: -</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>加速控制与宿主机维护 (`ws://127.0.0.1:5588/ws`)</h2>
+      <div class="form-row">
+        <label>
+          WebSocket 地址
+          <input id="ws-url" type="text" value="">
+        </label>
+        <label>
+          设备 Token（已从 accelerator.ini 自动读取）
+          <input id="token-input" type="text" placeholder="绑定后自动生成">
+        </label>
+        <label>
+          User ID（已从 accelerator.ini 自动读取）
+          <input id="userid-input" type="text" placeholder="User ID">
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="primary" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [1] })">恢复加速 (RESUMEACC)</button>
+        <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [1] })">暂停加速 (PAUSEACC)</button>
+        <button class="danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [1] })">停止加速 (STOPACC)</button>
+        <button onclick="sendCmd('OPTROUTER', { token: getToken(), method: 'restart' })">重启加速进程 (OPTROUTER)</button>
+        <button onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复绑定 (AUTOREPAIRBOUND)</button>
+        <button class="danger" onclick="cleanupNetRules()">清理残留 iptables/ipset 规则</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div tabindex="0" role="region" aria-labelledby="profiles-table-caption" class="table-wrapper">
+        <table>
+          <caption id="profiles-table-caption">已捕获的游戏加速配置库（手机开启过一次即自动存档，后续可脱离手机直接启动 `STARTACC`）</caption>
+          <thead>
+            <tr>
+              <th scope="col">游戏 / 配置名称</th>
+              <th scope="col">Game ID</th>
+              <th scope="col">区服 (Area)</th>
+              <th scope="col">分类 (Catalog)</th>
+              <th scope="col">更新时间</th>
+              <th scope="col">操作</th>
+            </tr>
+          </thead>
+          <tbody id="profiles-tbody">
+            <tr>
+              <th scope="row">暂无存档配置</th>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+              <td>用手机 App 开启任意游戏加速后将自动捕获并保存在此</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div tabindex="0" role="region" aria-labelledby="devices-table-caption" class="table-wrapper">
+        <table>
+          <caption id="devices-table-caption">当前活跃加速设备列表 (`GETACCINFO` / `LISTGAMEDEVICES`)</caption>
+          <thead>
+            <tr>
+              <th scope="col">设备名称</th>
+              <th scope="col">IP 地址</th>
+              <th scope="col">MAC 地址</th>
+              <th scope="col">设备类型</th>
+              <th scope="col">加速状态</th>
+              <th scope="col">游戏 / 区服</th>
+            </tr>
+          </thead>
+          <tbody id="devices-tbody">
+            <tr>
+              <th scope="row">暂无活跃设备</th>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+              <td>-</td>
+              <td>开启游戏加速后将自动显示</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>原生指令调试台 (支持全部 18 个 `HttpServerMgr` 命令)</h2>
+      <div class="form-row">
+        <label>
+          选择命令 (`cmd`)
+          <select id="debug-cmd" onchange="fillSamplePayload()">
+            <option value="GETROUTERINFO">GETROUTERINFO (设备与绑定信息)</option>
+            <option value="GETACCINFO">GETACCINFO (当前加速详情与延迟)</option>
+            <option value="LISTGAMEDEVICES">LISTGAMEDEVICES (扫描游戏设备)</option>
+            <option value="GETDEVICELIST">GETDEVICELIST (已发现设备列表)</option>
+            <option value="GETNETWORKSTATE">GETNETWORKSTATE (网络状态检测)</option>
+            <option value="STATISTICS">STATISTICS (流量统计 RX/TX)</option>
+            <option value="NEWGETAPPVER">NEWGETAPPVER (查询插件版本)</option>
+            <option value="DIAGNOSEACCENGINE">DIAGNOSEACCENGINE (诊断加速进程)</option>
+            <option value="DIAGNOSENETWORK">DIAGNOSENETWORK (诊断网卡状态)</option>
+            <option value="DIAGNOSEINTERNET">DIAGNOSEINTERNET (Ping 百度诊断外网)</option>
+            <option value="PONG">PONG (WebSocket 心跳测试)</option>
+            <option value="PAUSEACC">PAUSEACC (暂停加速)</option>
+            <option value="RESUMEACC">RESUMEACC (恢复加速)</option>
+            <option value="STOPACC">STOPACC (停止加速)</option>
+            <option value="STARTACC">STARTACC (启动加速)</option>
+            <option value="AUTOREPAIRBOUND">AUTOREPAIRBOUND (自动修复绑定)</option>
+            <option value="NEWBINDROUTER">NEWBINDROUTER (绑定新设备)</option>
+            <option value="NEWUNBINDROUTER">NEWUNBINDROUTER (解绑设备)</option>
+          </select>
+        </label>
+        <label>
+          参数 JSON (`data` 字段)
+          <input id="debug-data" type="text" value="{}">
+        </label>
+      </div>
+      <div class="btn-row" style="margin-bottom: 0.75rem;">
+        <button class="primary" onclick="sendDebugCmd()">发送指令</button>
+        <button onclick="document.getElementById('log-output').textContent = ''">清空日志</button>
+      </div>
+      <pre id="log-output">等待指令响应...</pre>
+    </section>
+  </div>
+
+  <script>
+    const defaultWsUrl = `ws://${location.hostname || '127.0.0.1'}:5588/ws`;
+    document.getElementById('ws-url').value = defaultWsUrl;
+
+    let ws = null;
+    let tagCounter = 1;
+    let pollTimer = null;
+    let lastRx = null;
+    let lastTx = null;
+    let lastStatTime = null;
+    let savedProfiles = [];
+
+    function getToken() {
+      return document.getElementById('token-input').value.trim();
+    }
+
+    function getUserId() {
+      return document.getElementById('userid-input').value.trim();
+    }
+
+    function formatBytes(bytes) {
+      const n = Number(bytes) || 0;
+      if (n < 1024) return `${n} B`;
+      if (n < 1048576) return `${(n / 1024).toFixed(1)} KiB`;
+      if (n < 1073741824) return `${(n / 1048576).toFixed(2)} MiB`;
+      return `${(n / 1073741824).toFixed(2)} GiB`;
+    }
+
+    function appendLog(title, obj) {
+      const pre = document.getElementById('log-output');
+      const time = new Date().toLocaleTimeString();
+      const text = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+      pre.textContent = `[${time}] ${title}\n${text}\n\n` + pre.textContent.slice(0, 10000);
+    }
+
+    function parseDataField(data) {
+      if (typeof data === 'string' && (data.startsWith('{') || data.startsWith('['))) {
+        try { return JSON.parse(data); } catch (_) { return data; }
+      }
+      return data;
+    }
+
+    function connectWs() {
+      const url = document.getElementById('ws-url').value.trim() || defaultWsUrl;
+      const badge = document.getElementById('ws-badge');
+      try {
+        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+          ws.close();
+        }
+        ws = new WebSocket(url);
+        ws.onopen = () => {
+          badge.textContent = 'WebSocket: 直连已就绪';
+          badge.className = 'badge ok';
+        };
+        ws.onclose = () => {
+          badge.textContent = 'WebSocket: 后端代理模式';
+          badge.className = 'badge warn';
+        };
+        ws.onerror = () => {
+          badge.textContent = 'WebSocket: 后端代理模式';
+          badge.className = 'badge warn';
+        };
+        ws.onmessage = (ev) => {
+          try {
+            const msg = JSON.parse(ev.data);
+            msg.data = parseDataField(msg.data);
+            handleIncomingResponse(msg, false);
+          } catch (e) {
+            appendLog('收到原始消息', ev.data);
+          }
+        };
+      } catch (e) {
+        badge.textContent = 'WebSocket: 后端代理模式';
+        badge.className = 'badge warn';
+      }
+    }
+
+    async function sendCmd(cmd, dataObj = {}, quiet = false) {
+      const envelope = {
+        cmd,
+        tag: String(tagCounter++),
+        sn: '',
+        cli: 'webui',
+        code: 0,
+        err: '',
+        data: dataObj
+      };
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(envelope));
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/ws-rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(envelope)
+        });
+        const resJson = await resp.json();
+        resJson.data = parseDataField(resJson.data);
+        handleIncomingResponse(resJson, quiet);
+      } catch (err) {
+        if (!quiet) appendLog(`调用 ${cmd} 失败`, String(err));
+      }
+    }
+
+    function handleIncomingResponse(msg, quiet = false) {
+      const cmd = (msg.cmd || '').toUpperCase();
+      if (!quiet && cmd !== 'STATISTICS' && cmd !== 'ACCINFO' && cmd !== 'ROUTERINFO') {
+        appendLog(`响应 ${msg.cmd} (code=${msg.code})`, msg);
+      }
+      const d = msg.data || {};
+
+      if (cmd === 'GETROUTERINFO' || cmd === 'GETINFO' || cmd === 'ROUTERINFO') {
+        const info = d.routerInfo || d;
+        if (info.model || info.brand) {
+          document.getElementById('stat-model').textContent = `${info.brand || 'SteamDeck'} / ${info.model || 'Jupiter'}`;
+        }
+        if (info.mac) document.getElementById('stat-mac').textContent = `虚拟 wlan0 MAC: ${info.mac}`;
+        if (info.appver) document.getElementById('stat-ver').textContent = `v${info.appver}`;
+        if (info.token && !info.token.startsWith('<') && !getToken()) {
+          document.getElementById('token-input').value = info.token;
+        }
+      } else if (cmd === 'GETACCINFO' || cmd === 'GETACC' || cmd === 'ACCINFO') {
+        const acc = d.accInfo || d;
+        if (acc.netDelay !== undefined) {
+          document.getElementById('stat-delay').textContent = `延迟: ${acc.netDelay} ms | 丢包: ${acc.lossRate ?? 0} %`;
+        }
+        const devList = acc.steamdeck_device_list || acc.router_device_list || acc.box_device_list;
+        if (Array.isArray(devList) && devList.length > 0) {
+          renderDevices(devList);
+          const active = devList.some(item => Number(item.accState) === 1 || item.accState === 'started' || item.state === 'started');
+          document.getElementById('stat-acc').textContent = active ? '加速运行中' : '已绑定 (待机)';
+        } else if (msg.code === 0) {
+          document.getElementById('stat-acc').textContent = '已绑定 (待机)';
+        }
+      } else if (cmd === 'LISTGAMEDEVICES') {
+        const list = (d.listGameDevices && d.listGameDevices.list) || d.list || [];
+        if (Array.isArray(list) && list.length > 0) {
+          renderDevices(list);
+          const active = list.some(item => Number(item.accState) === 1 || item.accState === 'started');
+          document.getElementById('stat-acc').textContent = active ? '加速运行中' : '已绑定 (待机)';
+        }
+      } else if (cmd === 'STATISTICS') {
+        const st = d.statistics || d;
+        const rx = Number(st.rx) || 0;
+        const tx = Number(st.tx) || 0;
+        const now = Date.now();
+        if (lastRx !== null && lastStatTime !== null && now > lastStatTime) {
+          const dt = (now - lastStatTime) / 1000;
+          const rxRate = Math.max(0, (rx - lastRx) / dt);
+          const txRate = Math.max(0, (tx - lastTx) / dt);
+          document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate)}/s | ↑ ${formatBytes(txRate)}/s`;
+        }
+        lastRx = rx;
+        lastTx = tx;
+        lastStatTime = now;
+        document.getElementById('stat-traffic').textContent = `累计: RX ${formatBytes(rx)} / TX ${formatBytes(tx)}`;
+      } else if (cmd === 'GETNETWORKSTATE' || cmd === 'NETWORKSTATE') {
+        const ns = d.networkState || d;
+        if (ns.state !== undefined) {
+          document.getElementById('stat-netstate').textContent = `外网连通性: 状态码 ${ns.state} (${ns.reason || '正常'})`;
+        }
+      } else if (cmd === 'NEWGETAPPVER' || cmd === 'APPVER') {
+        const av = d.newGetAppVer || d.appVer || d;
+        if (av.local_ver) document.getElementById('stat-ver').textContent = `v${av.local_ver}`;
+      }
+    }
+
+    function renderProfiles(profiles) {
+      savedProfiles = profiles || [];
+      const tbody = document.getElementById('profiles-tbody');
+      if (!savedProfiles.length) {
+        tbody.innerHTML = `<tr><th scope="row">暂无存档配置</th><td>-</td><td>-</td><td>-</td><td>-</td><td>用手机 App 开启任意游戏加速后将自动捕获并保存在此</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = savedProfiles.map((p, idx) => `<tr>
+        <th scope="row">${escapeHtml(p.name || p.id)}</th>
+        <td>${escapeHtml(String(p.gameId || '-'))}</td>
+        <td>${escapeHtml(String(p.area || '-'))}</td>
+        <td>${escapeHtml(`${p.catalog || 1} / ${p.subCatalog || 1}`)}</td>
+        <td>${escapeHtml(p.updatedAt || '-')}</td>
+        <td>
+          <div class="btn-row">
+            <button class="primary" onclick="startSavedProfile(${idx})">直接启动加速</button>
+            <button class="danger" onclick="deleteSavedProfile(${idx})">删除</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    }
+
+    function startSavedProfile(idx) {
+      const p = savedProfiles[idx];
+      if (!p) return;
+      sendCmd('STARTACC', {
+        token: getToken(),
+        catalog: Number(p.catalog || 1),
+        subCatalog: Number(p.subCatalog || 1),
+        conf: p.conf
+      });
+    }
+
+    async function deleteSavedProfile(idx) {
+      const p = savedProfiles[idx];
+      if (!p) return;
+      const resp = await fetch('/api/profiles/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: p.id })
+      });
+      const data = await resp.json();
+      if (data.profiles) renderProfiles(data.profiles);
+    }
+
+    async function cleanupNetRules() {
+      const resp = await fetch('/api/cleanup-net', { method: 'POST' });
+      const data = await resp.json();
+      appendLog('清理残留网络规则', data);
+      await loadHostStatus();
+    }
+
+    function renderDevices(list) {
+      const tbody = document.getElementById('devices-tbody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><th scope="row">暂无活跃设备</th><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(dev => {
+        const stateText = (dev.accState === 1 || dev.accState === 'started' || dev.state === 'started') ? '加速中' : '未加速';
+        return `<tr>
+          <th scope="row">${escapeHtml(dev.name || dev.device_type || 'SteamDeck')}</th>
+          <td>${escapeHtml(dev.ip || dev.device_ip || '-')}</td>
+          <td>${escapeHtml(dev.mac || dev.device_mac || '-')}</td>
+          <td>${escapeHtml(String(dev.deviceCategory ?? dev.sub_type_str ?? 'SteamDeck'))}</td>
+          <td>${escapeHtml(stateText)}</td>
+          <td>GameID: ${escapeHtml(String(dev.gameId ?? dev.game_id ?? '-'))} / Area: ${escapeHtml(String(dev.area ?? dev.game_area ?? '-'))}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    async function loadHostStatus() {
+      try {
+        const resp = await fetch('/api/host-status');
+        const info = await resp.json();
+        const svcBadge = document.getElementById('svc-badge');
+        if (info.service_active) {
+          svcBadge.textContent = 'systemd: 运行中';
+          svcBadge.className = 'badge ok';
+        } else {
+          svcBadge.textContent = `systemd: ${info.service_state || '未运行'}`;
+          svcBadge.className = 'badge err';
+        }
+        if (info.mac) {
+          document.getElementById('stat-mac').textContent = `虚拟 wlan0 MAC: ${info.mac}`;
+        }
+        if (info.tun_interface) {
+          document.getElementById('stat-tun').textContent = `TUN 接口: ${info.tun_interface}`;
+        }
+        if (info.udp_6066) {
+          document.getElementById('stat-udp6066').textContent = `UDP 6066 发现: ${info.udp_6066}`;
+        }
+        document.getElementById('stat-fw').textContent = info.has_gameacc_chain
+          ? 'GAMEACC 规则链: 已挂载 (加速中)'
+          : 'GAMEACC 规则链: 无残留';
+        if (info.version) {
+          document.getElementById('stat-ver').textContent = `v${info.version}`;
+        }
+        if (info.token && !getToken()) {
+          document.getElementById('token-input').value = info.token;
+        }
+        if (info.user_id) {
+          document.getElementById('stat-sn').textContent = `User ID: ${info.user_id}`;
+          if (!getUserId()) {
+            document.getElementById('userid-input').value = info.user_id;
+          }
+        }
+        if (Array.isArray(info.profiles)) {
+          renderProfiles(info.profiles);
+        }
+      } catch (_) {}
+    }
+
+    function fillSamplePayload() {
+      const cmd = document.getElementById('debug-cmd').value;
+      const token = getToken();
+      const samples = {
+        GETROUTERINFO: {},
+        LISTGAMEDEVICES: {},
+        DIAGNOSEACCENGINE: {},
+        DIAGNOSENETWORK: {},
+        DIAGNOSEINTERNET: {},
+        PONG: {},
+        GETACCINFO: { token },
+        GETDEVICELIST: { token },
+        GETNETWORKSTATE: { token },
+        STATISTICS: { token },
+        NEWGETAPPVER: { token },
+        PAUSEACC: { token, catalogs: [1] },
+        RESUMEACC: { token, catalogs: [1] },
+        STOPACC: { token, catalogs: [1] },
+        STARTACC: { token, catalog: 1, subCatalog: 1, conf: '' },
+        AUTOREPAIRBOUND: { rToken: token, userId: getUserId() },
+        NEWBINDROUTER: { bindCode: '', captcha: '', rToken: token, userId: getUserId(), appId: 'nnMobile_d0k3duup', reqChannel: '2' },
+        NEWUNBINDROUTER: { rToken: token, userId: getUserId(), appId: 'nnMobile_d0k3duup', reqChannel: '2' }
+      };
+      document.getElementById('debug-data').value = JSON.stringify(samples[cmd] || {});
+    }
+
+    function sendDebugCmd() {
+      const cmd = document.getElementById('debug-cmd').value;
+      let dataObj = {};
+      try {
+        dataObj = JSON.parse(document.getElementById('debug-data').value || '{}');
+      } catch (e) {
+        appendLog('JSON 格式错误', String(e));
+        return;
+      }
+      sendCmd(cmd, dataObj, false);
+    }
+
+    async function pollTick() {
+      await loadHostStatus();
+      const token = getToken();
+      if (token) {
+        await sendCmd('GETACCINFO', { token }, true);
+        await sendCmd('STATISTICS', { token }, true);
+      }
+    }
+
+    async function refreshAll() {
+      await loadHostStatus();
+      await sendCmd('GETROUTERINFO', {}, false);
+      const token = getToken();
+      if (token) {
+        await sendCmd('GETACCINFO', { token }, false);
+        await sendCmd('GETNETWORKSTATE', { token }, false);
+        await sendCmd('STATISTICS', { token }, false);
+        await sendCmd('NEWGETAPPVER', { token }, false);
+      }
+    }
+
+    async function runDiagnostics() {
+      await sendCmd('DIAGNOSEACCENGINE', {}, false);
+      await sendCmd('DIAGNOSENETWORK', {}, false);
+      await sendCmd('DIAGNOSEINTERNET', {}, false);
+    }
+
+    function toggleAutoPoll() {
+      const enabled = document.getElementById('auto-poll').checked;
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+      if (enabled) {
+        pollTimer = setInterval(pollTick, 2000);
+      }
+    }
+
+    connectWs();
+    refreshAll();
+    toggleAutoPoll();
+  </script>
+</body>
+</html>

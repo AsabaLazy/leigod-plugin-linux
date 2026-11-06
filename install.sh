@@ -149,10 +149,14 @@ download_binaries() {
 
 install_files() {
     info "Installing files to $BASE..."
-    install -d -m 0755 "$BASE/config"
+    install -d -m 0755 "$BASE/config" "$BASE/webui"
     install -m 0755 "$SCRIPT_DIR/opt/leigod/steamdeck_acc_monitor.sh" "$BASE/"
+    install -m 0755 "$SCRIPT_DIR/opt/leigod/leigod_cleanup_net.sh" "$BASE/"
     install -m 0755 "$SCRIPT_DIR/opt/leigod/leigod_uninstall.sh" "$BASE/"
     install -m 0755 "$SCRIPT_DIR/scripts/device-mac.sh" "$BASE/"
+    install -m 0755 "$SCRIPT_DIR/opt/leigod/webui/webui.py" "$BASE/webui/"
+    install -m 0644 "$SCRIPT_DIR/opt/leigod/webui/index.html" "$BASE/webui/"
+    install -m 0644 "$SCRIPT_DIR/opt/leigod/webui/leigod-webui.desktop" "$BASE/webui/"
     install -m 0644 "$SCRIPT_DIR/opt/leigod/fake_os-release" "$BASE/"
     install -m 0644 "$SCRIPT_DIR/opt/leigod/fake_product_name" "$BASE/"
     install -m 0644 "$SCRIPT_DIR/opt/leigod/config/acc_version.ini" "$BASE/config/"

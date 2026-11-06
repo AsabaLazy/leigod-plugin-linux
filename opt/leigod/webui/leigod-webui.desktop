@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Leigod Accelerator WebUI
+Name[zh_CN]=雷神加速器控制面板
+Comment=Control panel for Leigod SteamDeck plugin on Linux
+Exec=xdg-open http://127.0.0.1:8088
+Icon=network-vpn
+Terminal=false
+Type=Application
+Categories=Network;Game;

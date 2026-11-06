@@ -28,14 +28,19 @@ install -d -m 0755 \
     "$BUILD_DIR/DEBIAN" \
     "$BUILD_DIR/lib/systemd/system" \
     "$BUILD_DIR/opt/leigod/config" \
+    "$BUILD_DIR/opt/leigod/webui" \
     "$BUILD_DIR/usr/share/doc/leigod-plugin"
 
 LEIGOD_CHECKSUM_FILE=$CHECKSUM_FILE \
     sh "$REPO_DIR/scripts/fetch-assets.sh" "$BUILD_DIR/opt/leigod"
 
 install -m 0755 "$REPO_DIR/opt/leigod/steamdeck_acc_monitor.sh" "$BUILD_DIR/opt/leigod/"
+install -m 0755 "$REPO_DIR/opt/leigod/leigod_cleanup_net.sh" "$BUILD_DIR/opt/leigod/"
 install -m 0755 "$REPO_DIR/opt/leigod/leigod_uninstall.sh" "$BUILD_DIR/opt/leigod/"
 install -m 0755 "$REPO_DIR/scripts/device-mac.sh" "$BUILD_DIR/opt/leigod/"
+install -m 0755 "$REPO_DIR/opt/leigod/webui/webui.py" "$BUILD_DIR/opt/leigod/webui/"
+install -m 0644 "$REPO_DIR/opt/leigod/webui/index.html" "$BUILD_DIR/opt/leigod/webui/"
+install -m 0644 "$REPO_DIR/opt/leigod/webui/leigod-webui.desktop" "$BUILD_DIR/opt/leigod/webui/"
 install -m 0644 "$REPO_DIR/opt/leigod/fake_os-release" "$BUILD_DIR/opt/leigod/"
 install -m 0644 "$REPO_DIR/opt/leigod/fake_product_name" "$BUILD_DIR/opt/leigod/"
 install -m 0644 "$REPO_DIR/opt/leigod/config/acc_version.ini" "$BUILD_DIR/opt/leigod/config/"
@@ -45,6 +50,7 @@ install -m 0644 "$REPO_DIR/opt/leigod/config/accelerator.ini" "$BUILD_DIR/opt/le
 chmod 0644 "$BUILD_DIR/opt/leigod/config/accelerator"
 
 install -m 0644 "$REPO_DIR/systemd/leigod_plugin.service" "$BUILD_DIR/lib/systemd/system/"
+install -m 0644 "$REPO_DIR/systemd/leigod_webui.service" "$BUILD_DIR/lib/systemd/system/"
 install -m 0644 "$CHECKSUM_FILE" "$BUILD_DIR/usr/share/doc/leigod-plugin/checksums.sha256"
 install -m 0644 "$REPO_DIR/LICENSE" "$BUILD_DIR/usr/share/doc/leigod-plugin/copyright"
 install -m 0644 "$REPO_DIR/THIRD_PARTY_NOTICES.md" "$BUILD_DIR/usr/share/doc/leigod-plugin/"

@@ -1,0 +1,24 @@
+[Unit]
+Description=Leigod Plugin Linux WebUI Control Panel
+After=network.target leigod_plugin.service
+Wants=leigod_plugin.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/leigod/webui
+Environment=LEIGOD_WEBUI_HOST=127.0.0.1
+Environment=LEIGOD_WEBUI_PORT=8088
+ExecStart=/usr/bin/python3 /opt/leigod/webui/webui.py
+Restart=on-failure
+RestartSec=3
+
+StateDirectory=leigod
+StateDirectoryMode=0700
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_SYS_PTRACE CAP_DAC_READ_SEARCH
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/leigod/config /var/lib/leigod
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

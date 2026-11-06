@@ -9,6 +9,7 @@ StartLimitBurst=5
 Type=simple
 WorkingDirectory=/opt/leigod
 ExecStart=/opt/leigod/steamdeck_acc_monitor.sh
+ExecStopPost=-/opt/leigod/leigod_cleanup_net.sh
 KillMode=control-group
 KillSignal=SIGTERM
 TimeoutStopSec=15
