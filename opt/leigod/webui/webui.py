@@ -124,6 +124,41 @@ def scan_and_capture_active_profiles() -> list:
         if core_file.is_file():
             try:
                 core_meta = json.loads(core_file.read_text(encoding="utf-8"))
+                acc_list = core_meta.get("acceleration") or []
+                for item in acc_list:
+                    if not isinstance(item, dict):
+                        continue
+                    for dev_key, dev_val in item.items():
+                        if not isinstance(dev_val, dict) or not dev_val.get("acc_conf"):
+                            continue
+                        raw_text = dev_val["acc_conf"]
+                        parsed = json.loads(raw_text) if isinstance(raw_text, str) else raw_text
+                        game_info = parsed.get("game") or {}
+                        game_id = str(game_info.get("id") or dev_val.get("server") or dev_key)
+                        game_area = str(game_info.get("area") or dev_val.get("game_area") or "默认区服")
+                        catalog = int(dev_val.get("device_type") or dev_val.get("catalog_type") or 2)
+                        sub_catalog = int(dev_val.get("sub_type") or 0)
+                        prof_id = f"{catalog}-{sub_catalog}-{game_id}-{game_area}"
+                        entry = {
+                            "id": prof_id,
+                            "name": f"{dev_key} 加速 ({game_area.upper()} | {game_id[:8]}...)",
+                            "catalog": catalog,
+                            "subCatalog": sub_catalog,
+                            "gameId": game_id,
+                            "area": game_area,
+                            "conf": raw_text if isinstance(raw_text, str) else json.dumps(raw_text),
+                            "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        }
+                        if prof_id in existing_keys:
+                            for idx, old in enumerate(profiles):
+                                if old.get("id") == prof_id and old.get("conf") != entry["conf"]:
+                                    entry["name"] = old.get("name", entry["name"])
+                                    profiles[idx] = entry
+                                    changed = True
+                        else:
+                            profiles.insert(0, entry)
+                            existing_keys.add(prof_id)
+                            changed = True
                 break
             except Exception:
                 pass
@@ -183,8 +218,8 @@ def probe_udp_6066() -> str:
 
 def check_firewall_residuals() -> bool:
     try:
-        res = subprocess.run(["iptables", "-t", "mangle", "-nL", "GAMEACC"], capture_output=True, timeout=2)
-        if res.returncode == 0:
+        res = subprocess.run(["iptables", "-t", "mangle", "-S", "OUTPUT"], capture_output=True, text=True, timeout=2)
+        if "0x10" in res.stdout or "GAMEACC" in res.stdout:
             return True
     except Exception:
         pass

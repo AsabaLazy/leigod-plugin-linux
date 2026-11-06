@@ -374,9 +374,9 @@
         </label>
       </div>
       <div class="btn-row">
-        <button class="primary" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [1] })">恢复加速 (RESUMEACC)</button>
-        <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [1] })">暂停加速 (PAUSEACC)</button>
-        <button class="danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [1] })">停止加速 (STOPACC)</button>
+        <button class="primary" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复加速 (RESUMEACC)</button>
+        <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停加速 (PAUSEACC)</button>
+        <button class="danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">停止加速 (STOPACC)</button>
         <button onclick="restartPluginService()">重启加速服务 (systemctl)</button>
         <button onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复绑定 (AUTOREPAIRBOUND)</button>
         <button class="danger" onclick="cleanupNetRules()">清理残留 iptables/ipset 规则</button>
@@ -581,12 +581,13 @@
         } else if (msg.code === 0) {
           document.getElementById('stat-acc').textContent = '已绑定 (待机)';
         }
-      } else if (cmd === 'LISTGAMEDEVICES') {
-        const list = (d.listGameDevices && d.listGameDevices.list) || d.list || [];
+      } else if (cmd === 'LISTGAMEDEVICES' || cmd === 'GETDEVICELIST' || cmd === 'DEVICELIST') {
+        const list = (d.listGameDevices && d.listGameDevices.list) || d.list || (Array.isArray(d) ? d : []);
         if (Array.isArray(list) && list.length > 0) {
-          renderDevices(list);
-          const active = list.some(item => Number(item.accState) === 1 || item.accState === 'started');
-          document.getElementById('stat-acc').textContent = active ? '加速运行中' : '已绑定 (待机)';
+          const activeList = list.filter(item => item.gameId || Number(item.state) === 1 || Number(item.accState) === 1);
+          renderDevices(activeList.length > 0 ? activeList : list);
+          const active = list.some(item => Number(item.accState) === 1 || Number(item.state) === 1 || item.accState === 'started');
+          document.getElementById('stat-acc').textContent = active ? '加速运行中 (TUN 已接管)' : '已绑定 (待机)';
         }
       } else if (cmd === 'STATISTICS') {
         const st = d.statistics || d;
@@ -679,15 +680,18 @@
         tbody.innerHTML = `<tr><th scope="row">暂无活跃设备</th><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
         return;
       }
+      const catalogNames = { 1: '主机 (Console)', 2: 'PC / SteamDeck', 3: '掌机 (Handheld)', 4: '手机 (Mobile)', 5: 'VR' };
       tbody.innerHTML = list.map(dev => {
-        const stateText = (dev.accState === 1 || dev.accState === 'started' || dev.state === 'started') ? '加速中' : '未加速';
+        const isAcc = (dev.accState === 1 || dev.state === 1 || dev.accState === 'started' || dev.state === 'started');
+        const stateText = isAcc ? '加速中 (Active)' : '未加速';
+        const catName = catalogNames[dev.catalog] || dev.name || dev.device_type || 'SteamDeck';
         return `<tr>
-          <th scope="row">${escapeHtml(dev.name || dev.device_type || 'SteamDeck')}</th>
-          <td>${escapeHtml(dev.ip || dev.device_ip || '-')}</td>
-          <td>${escapeHtml(dev.mac || dev.device_mac || '-')}</td>
-          <td>${escapeHtml(String(dev.deviceCategory ?? dev.sub_type_str ?? 'SteamDeck'))}</td>
+          <th scope="row">${escapeHtml(String(catName))}</th>
+          <td>${escapeHtml(dev.ip || dev.device_ip || '本机 (tun_PC)')}</td>
+          <td>${escapeHtml(dev.mac || dev.device_mac || document.getElementById('stat-mac').textContent.replace('虚拟 wlan0 MAC: ', ''))}</td>
+          <td>Catalog ${escapeHtml(String(dev.catalog ?? dev.deviceCategory ?? 2))}</td>
           <td>${escapeHtml(stateText)}</td>
-          <td>GameID: ${escapeHtml(String(dev.gameId ?? dev.game_id ?? '-'))} / Area: ${escapeHtml(String(dev.area ?? dev.game_area ?? '-'))}</td>
+          <td>GameID: ${escapeHtml(String(dev.gameId || dev.game_id || '-'))} / 区服: ${escapeHtml(String(dev.area || dev.game_area || '-').toUpperCase())}</td>
         </tr>`;
       }).join('');
     }
@@ -799,7 +803,7 @@
       const token = getToken();
       if (token) {
         await sendCmd('GETACCINFO', { token }, true);
-        await sendCmd('STATISTICS', { token }, true);
+        await sendCmd('GETDEVICELIST', { token }, true);
       }
     }
 
@@ -809,8 +813,8 @@
       const token = getToken();
       if (token) {
         await sendCmd('GETACCINFO', { token }, false);
+        await sendCmd('GETDEVICELIST', { token }, false);
         await sendCmd('GETNETWORKSTATE', { token }, false);
-        await sendCmd('STATISTICS', { token }, false);
         await sendCmd('NEWGETAPPVER', { token }, false);
       }
     }
