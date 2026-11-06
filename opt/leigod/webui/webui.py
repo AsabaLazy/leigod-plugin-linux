@@ -415,62 +415,54 @@ def consolidate_regional_profiles(profiles: list) -> tuple[list, bool]:
     return ordered, changed
 
 
-def harvest_log_nodes(candidate_dirs: list) -> dict[str, tuple[str, list[dict]]]:
-    """Recover full allNode pools from acc-gw.router.log / acc_PC.log printed by AccConf::print_parse_result."""
-    by_area: dict[str, tuple[str, list[dict]]] = {}
-    re_area = re.compile(r"\]\s+area:([a-zA-Z0-9_-]+)")
-    re_id = re.compile(r"\]\s+id:([a-fA-F0-9]{16,})")
-    re_node = re.compile(
-        r"tag:[^,]+,\s*scheme:([^,]+),\s*username:([^,]+),\s*password:([^,]+),\s*"
-        r"ip:([^,]+),\s*port:(\d+),\s*ping:(\d+),\s*speed_sign:([a-zA-Z0-9]+)"
-    )
-
+def harvest_webapi_log_profiles(candidate_dirs: list) -> list[dict]:
+    """Recover full startAcc JSON configs from /proc/<pid>/root/tmp/acc/log/web_api*.log."""
+    recovered = []
+    search_dirs = []
     for d in candidate_dirs:
-        if not d.is_dir():
+        search_dirs.append(d)
+        search_dirs.append(d / "log")
+
+    for sdir in search_dirs:
+        if not sdir.is_dir():
             continue
-        for log_file in d.glob("*.log"):
+        for log_file in sorted(sdir.glob("web_api*.log")):
             try:
                 text = log_file.read_text(encoding="utf-8", errors="replace")
             except Exception:
                 continue
-            cur_area = ""
-            cur_id = ""
-            in_all_nodes = False
-            cur_nodes = []
             for line in text.splitlines():
-                if "[game config]" in line:
-                    if cur_area and cur_nodes:
-                        old_id, old_nodes = by_area.get(cur_area, ("", []))
-                        if len(cur_nodes) >= len(old_nodes):
-                            by_area[cur_area] = (cur_id or old_id, cur_nodes)
-                    cur_area = ""
-                    cur_id = ""
-                    cur_nodes = []
-                    in_all_nodes = False
-                elif not cur_area and "area:" in line:
-                    m = re_area.search(line)
-                    if m:
-                        cur_area = m.group(1).lower().strip()
-                elif not cur_id and "id:" in line and "[user config]" not in line:
-                    m = re_id.search(line)
-                    if m:
-                        cur_id = m.group(1).strip()
-                elif "-- all node config --" in line:
-                    in_all_nodes = True
-                elif in_all_nodes and ("-- geo config --" in line or "====================================" in line):
-                    in_all_nodes = False
-                elif in_all_nodes and "speed_sign:" in line:
-                    m = re_node.search(line)
-                    if m:
-                        scheme, usr, pwd, ip, port, ping, sign = m.groups()
-                        uri = f"{scheme.strip()}://{usr.strip()}:{pwd.strip()}@{ip.strip()}:{port.strip()}"
-                        if not any(n["node"] == uri for n in cur_nodes):
-                            cur_nodes.append({"node": uri, "ping": int(ping), "speed_sign": sign.strip()})
-            if cur_area and cur_nodes:
-                old_id, old_nodes = by_area.get(cur_area, ("", []))
-                if len(cur_nodes) >= len(old_nodes):
-                    by_area[cur_area] = (cur_id or old_id, cur_nodes)
-    return by_area
+                if "[api] request:" not in line or ("startAcc" not in line and "STARTACC" not in line):
+                    continue
+                raw = line.split("[api] request:", 1)[1].split(", response:", 1)[0].strip()
+                try:
+                    req = json.loads(raw)
+                    data = req.get("data") or {}
+                    conf_raw = data.get("conf")
+                    if not conf_raw:
+                        continue
+                    clean_str, parsed, _ = sanitize_acc_conf(conf_raw)
+                    game_info = parsed.get("game") or {}
+                    area = str(game_info.get("area") or "").lower().strip()
+                    if not area or area == "-":
+                        continue
+                    nodes = (parsed.get("server") or {}).get("allNode") or []
+                    recovered.append(
+                        {
+                            "id": f"region-{area}",
+                            "name": format_region_title(area),
+                            "catalog": int(data.get("catalog") or 2),
+                            "subCatalog": int(data.get("subCatalog") or 0),
+                            "gameId": str(game_info.get("id") or ""),
+                            "area": area,
+                            "nodeCount": len(nodes),
+                            "conf": clean_str,
+                            "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        }
+                    )
+                except Exception:
+                    continue
+    return recovered
 
 
 def scan_and_capture_active_profiles() -> list:
@@ -543,40 +535,16 @@ def scan_and_capture_active_profiles() -> list:
             except Exception:
                 pass
 
-    # Also harvest full allNode lists from daemon logs if user tapped multiple regions in a row
-    harvested = harvest_log_nodes(candidate_dirs)
-    if harvested and profiles:
-        base_prof = next((p for p in profiles if p.get("area") in ("hk", "jp")), profiles[0])
-        _, base_conf, _ = sanitize_acc_conf(base_prof.get("conf") or "{}")
-        for h_area, (h_id, h_nodes) in harvested.items():
-            prof_id = f"region-{h_area}"
-            existing = next((p for p in profiles if p.get("id") == prof_id), None)
-            if not existing or len(h_nodes) > int(existing.get("nodeCount") or 0):
-                new_conf = json.loads(json.dumps(base_conf))
-                new_conf.setdefault("game", {})["area"] = h_area
-                if h_id:
-                    new_conf["game"]["id"] = h_id
-                new_conf["game"]["dyn_line"] = False
-                srv = new_conf.setdefault("server", {})
-                srv["tcp"] = [h_nodes[0]["node"]]
-                srv["allNode"] = h_nodes
-                clean_str, _, _ = sanitize_acc_conf(new_conf)
-                entry = {
-                    "id": prof_id,
-                    "name": format_region_title(h_area),
-                    "catalog": int(base_prof.get("catalog") or 2),
-                    "subCatalog": int(base_prof.get("subCatalog") or 0),
-                    "gameId": h_id or str(base_prof.get("gameId") or ""),
-                    "area": h_area,
-                    "nodeCount": len(h_nodes),
-                    "conf": clean_str,
-                    "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
-                }
-                if existing:
-                    profiles[profiles.index(existing)] = entry
-                else:
-                    profiles.insert(0, entry)
-                changed = True
+    # Also harvest full startAcc configs from web_api*.log if user tapped multiple regions in a row
+    for rec in harvest_webapi_log_profiles(candidate_dirs):
+        prof_id = rec["id"]
+        existing = next((p for p in profiles if p.get("id") == prof_id), None)
+        if not existing or rec["nodeCount"] > int(existing.get("nodeCount") or 0):
+            if existing:
+                profiles[profiles.index(existing)] = rec
+            else:
+                profiles.insert(0, rec)
+            changed = True
 
     if changed:
         profiles, _ = consolidate_regional_profiles(profiles)
