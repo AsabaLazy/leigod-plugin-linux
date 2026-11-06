@@ -239,45 +239,21 @@ def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str,
         {"host": ["geo:cn"], "serv": ["direct"]},
         {"host": ["geo:cn!"], "serv": ["default"]},
     ]
-    all_to_merge = base_geo_rules + (extra_rules or [])
-    cur_rules = parsed.get("rules")
-    if not isinstance(cur_rules, list):
-        cur_rules = []
-    existing_hosts = {tuple(sorted(r.get("host") or [])) for r in cur_rules if isinstance(r, dict)}
-    for r in all_to_merge:
-        if isinstance(r, dict):
-            key = tuple(sorted(r.get("host") or []))
-            if key and key not in existing_hosts:
-                cur_rules.append(r)
-                existing_hosts.add(key)
-                modified = True
-    parsed["rules"] = cur_rules
+    if parsed.get("rules") != base_geo_rules:
+        parsed["rules"] = base_geo_rules
+        modified = True
 
     return json.dumps(parsed, ensure_ascii=False), parsed, modified
 
 
 def consolidate_regional_profiles(profiles: list) -> tuple[list, bool]:
-    """Deduplicate profiles into 1 universal preset per region (area) and merge all special rules."""
-    merged_rules = []
-    seen_rule_keys = set()
-    for p in profiles:
-        try:
-            c = json.loads(p["conf"]) if isinstance(p.get("conf"), str) else (p.get("conf") or {})
-            for r in c.get("rules") or []:
-                if isinstance(r, dict):
-                    k = tuple(sorted(r.get("host") or []))
-                    if k and k not in seen_rule_keys:
-                        merged_rules.append(r)
-                        seen_rule_keys.add(k)
-        except Exception:
-            pass
-
+    """Deduplicate profiles into 1 universal preset per region (area)."""
     by_area = {}
     changed = False
     for p in profiles:
         area = str(p.get("area") or "hk").lower()
         reg_id = f"region-{area}"
-        clean_str, conf_obj, was_mod = sanitize_acc_conf(p.get("conf") or "{}", merged_rules)
+        clean_str, conf_obj, was_mod = sanitize_acc_conf(p.get("conf") or "{}")
         node_count = len((conf_obj.get("server") or {}).get("allNode") or [])
         expected_name = format_region_title(area)
         if area not in by_area:
