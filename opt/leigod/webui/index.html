@@ -347,24 +347,185 @@
       flex-wrap: wrap;
       align-items: stretch;
       gap: 0.65rem;
+      position: relative;
+    }
+
+    /* Branded Select Styling per modern-web-guidance (appearance: base-select + ::picker(select)) */
+    select,
+    select::picker(select) {
+      appearance: base-select;
     }
 
     .region-select {
       flex: 1;
-      min-inline-size: 210px;
+      min-inline-size: 240px;
       font-weight: 600;
-      font-size: 0.86rem;
-      padding-block: 0.56rem;
-      padding-inline: 0.9rem;
-      border-radius: 8px;
+      font-size: 0.85rem;
+      padding-block: 0.52rem;
+      padding-inline: 0.85rem;
+      border-radius: 9px;
       background-color: var(--surface-alt);
       color: var(--text);
       border: 1px solid var(--border);
       cursor: pointer;
+      display: inline-flex;
+      align-items: safe center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      transition: background-color 0.14s ease, border-color 0.14s ease;
     }
 
     .region-select:hover {
-      border-color: color-mix(in oklab, var(--text), var(--border) 70%);
+      background-color: var(--surface-hover);
+      border-color: color-mix(in oklab, var(--text), var(--border) 72%);
+    }
+
+    .region-select:focus-visible {
+      outline: 2px solid color-mix(in oklab, var(--ok), transparent 40%);
+      outline-offset: 1px;
+    }
+
+    select::picker(select) {
+      background-color: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 0.38rem;
+      margin-block-start: 0.35rem;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+    }
+
+    select::picker-icon {
+      color: var(--muted);
+      transition: transform 0.15s ease;
+    }
+
+    select:open::picker-icon {
+      transform: rotate(180deg);
+    }
+
+    select option {
+      display: flex;
+      align-items: safe center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding-block: 0.48rem;
+      padding-inline: 0.65rem;
+      border-radius: 7px;
+      font-size: 0.83rem;
+      font-weight: 550;
+      color: var(--text);
+      background-color: transparent;
+      cursor: pointer;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+
+    select option:hover,
+    select option:focus {
+      background-color: var(--surface-alt);
+      color: var(--text);
+      outline: none;
+    }
+
+    select option:checked {
+      background-color: color-mix(in oklab, var(--ok), var(--surface-alt) 88%);
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    select option::checkmark {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .opt-row {
+      display: inline-flex;
+      align-items: safe center;
+      gap: 0.55rem;
+      flex: 1;
+      min-inline-size: 0;
+    }
+
+    .opt-code {
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding-block: 0.12rem;
+      padding-inline: 0.42rem;
+      border-radius: 5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      min-inline-size: 40px;
+      text-align: center;
+    }
+
+    .opt-nodes {
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 0.73rem;
+      color: var(--muted);
+      margin-inline-start: auto;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Fallback custom menu for browsers without appearance: base-select (e.g. Firefox) */
+    .custom-select-wrap {
+      flex: 1;
+      min-inline-size: 240px;
+      position: relative;
+      display: flex;
+    }
+
+    .custom-select-menu {
+      position: absolute;
+      inset-block-start: calc(100% + 6px);
+      inset-inline: 0;
+      z-index: 60;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 0.38rem;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+      max-block-size: 320px;
+      overflow-y: auto;
+      display: grid;
+      gap: 2px;
+    }
+
+    .custom-select-menu[hidden] {
+      display: none;
+    }
+
+    .custom-opt {
+      display: flex;
+      align-items: safe center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding-block: 0.48rem;
+      padding-inline: 0.65rem;
+      border-radius: 7px;
+      font-size: 0.83rem;
+      font-weight: 550;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      inline-size: 100%;
+      text-align: start;
+      cursor: pointer;
+    }
+
+    .custom-opt:hover {
+      background: var(--surface-alt);
+    }
+
+    .custom-opt.selected {
+      background: color-mix(in oklab, var(--ok), var(--surface-alt) 88%);
+      font-weight: 650;
+    }
+
+    .custom-opt.selected .opt-code {
+      color: var(--ok);
+      border-color: color-mix(in oklab, var(--ok), var(--border) 50%);
     }
 
     #hero-main-btn {
@@ -697,9 +858,15 @@
         </div>
 
         <div class="hero-actions">
-          <select id="region-select" class="region-select" aria-label="选择加速区服" onchange="onRegionSelectChange()">
-            <option value="0">全球智能分流 · AUTO</option>
-          </select>
+          <div class="custom-select-wrap" id="region-select-wrap">
+            <select id="region-select" name="region" class="region-select" aria-label="选择加速区服" onchange="onRegionSelectChange()">
+              <button>
+                <selectedcontent></selectedcontent>
+              </button>
+              <option value="0">全球智能分流 · AUTO</option>
+            </select>
+            <div id="custom-region-menu" class="custom-select-menu" role="listbox" aria-label="选择加速区服" hidden></div>
+          </div>
           <button id="hero-main-btn" class="btn-primary" onclick="handleHeroMainAction()">启动加速</button>
         </div>
       </article>
@@ -1005,34 +1172,92 @@
       }
     }
 
+    const supportsBaseSelect = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('appearance', 'base-select');
+
+    if (!supportsBaseSelect) {
+      document.addEventListener('DOMContentLoaded', () => {
+        const sel = document.getElementById('region-select');
+        const menu = document.getElementById('custom-region-menu');
+        const wrap = document.getElementById('region-select-wrap');
+        if (sel && menu && wrap) {
+          sel.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            menu.hidden = !menu.hidden;
+          });
+          sel.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              menu.hidden = !menu.hidden;
+            } else if (e.key === 'Escape') {
+              menu.hidden = true;
+            }
+          });
+          document.addEventListener('click', (e) => {
+            if (!wrap.contains(e.target)) {
+              menu.hidden = true;
+            }
+          });
+        }
+      });
+    }
+
     function renderProfiles(profiles) {
       savedProfiles = profiles || [];
       const sel = document.getElementById('region-select');
+      const menu = document.getElementById('custom-region-menu');
       if (!sel) return;
       const prevIdx = sel.value;
       if (!savedProfiles.length) {
-        sel.innerHTML = `<option value="-1">暂无区服存档（请先在手机 App 任意点一次加速）</option>`;
+        sel.innerHTML = `<button><selectedcontent></selectedcontent></button><option value="-1">暂无区服存档（请先在手机 App 任意点一次加速）</option>`;
+        if (menu) menu.innerHTML = '';
         return;
       }
-      sel.innerHTML = savedProfiles.map((p, idx) => {
+
+      sel.innerHTML = `<button><selectedcontent></selectedcontent></button>` + savedProfiles.map((p, idx) => {
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
         const cleanTitle = escapeHtml((p.name || p.id).split('·')[0].trim());
         const nodes = Number(p.nodeCount || 6);
+        if (supportsBaseSelect) {
+          return `<option value="${idx}"><span class="opt-row"><span class="opt-code">${area}</span><span>${cleanTitle}</span><span class="opt-nodes">${nodes} 节点</span></span></option>`;
+        }
         return `<option value="${idx}">[${area}] ${cleanTitle} (${nodes} 节点)</option>`;
       }).join('');
 
+      let targetIdx = 0;
       if (isAccelerating && activeAreaCode) {
         const activeIdx = savedProfiles.findIndex(p => String(p.area || '').toUpperCase() === activeAreaCode);
         if (activeIdx >= 0) {
-          sel.value = String(activeIdx);
-          return;
+          targetIdx = activeIdx;
         }
+      } else if (prevIdx !== '' && Number(prevIdx) >= 0 && Number(prevIdx) < savedProfiles.length) {
+        targetIdx = Number(prevIdx);
       }
-      if (prevIdx !== '' && Number(prevIdx) >= 0 && Number(prevIdx) < savedProfiles.length) {
-        sel.value = prevIdx;
-      } else {
-        sel.value = '0';
+      sel.value = String(targetIdx);
+
+      if (menu && !supportsBaseSelect) {
+        menu.innerHTML = savedProfiles.map((p, idx) => {
+          const area = escapeHtml(String(p.area || 'HK').toUpperCase());
+          const cleanTitle = escapeHtml((p.name || p.id).split('·')[0].trim());
+          const nodes = Number(p.nodeCount || 6);
+          const isSel = idx === targetIdx;
+          return `<button type="button" role="option" aria-selected="${isSel}" class="custom-opt${isSel ? ' selected' : ''}" onclick="selectCustomRegion(${idx})">
+            <span class="opt-row">
+              <span class="opt-code">${area}</span>
+              <span>${cleanTitle}</span>
+            </span>
+            <span class="opt-nodes">${nodes} 节点</span>
+          </button>`;
+        }).join('');
       }
+    }
+
+    async function selectCustomRegion(idx) {
+      const sel = document.getElementById('region-select');
+      const menu = document.getElementById('custom-region-menu');
+      if (sel) sel.value = String(idx);
+      if (menu) menu.hidden = true;
+      renderProfiles(savedProfiles);
+      await onRegionSelectChange();
     }
 
     async function onRegionSelectChange() {
