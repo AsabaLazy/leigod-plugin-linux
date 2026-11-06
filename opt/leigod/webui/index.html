@@ -464,45 +464,60 @@
 
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 0.95rem;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.75rem;
     }
 
     .game-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.15rem;
+      border-radius: 11px;
+      padding: 0.85rem 1rem;
       display: flex;
-      flex-direction: column;
+      align-items: safe center;
       justify-content: space-between;
-      gap: 0.95rem;
-      transition: border-color 0.15s ease;
+      gap: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.14s ease, border-color 0.14s ease;
     }
 
     .game-card:hover {
-      border-color: color-mix(in oklab, var(--text), var(--border) 70%);
+      background: var(--surface-alt);
+      border-color: color-mix(in oklab, var(--text), var(--border) 68%);
+    }
+
+    .game-card.active {
+      border-color: color-mix(in oklab, var(--ok), var(--border) 35%);
+      background: color-mix(in oklab, var(--ok), var(--surface) 94%);
     }
 
     .game-card-head {
       display: flex;
       align-items: safe center;
-      gap: 0.8rem;
+      gap: 0.75rem;
+      min-inline-size: 0;
+      flex: 1;
     }
 
     .game-avatar {
-      inline-size: 42px;
-      block-size: 42px;
+      inline-size: 38px;
+      block-size: 38px;
       border-radius: 8px;
       background: var(--surface-alt);
       border: 1px solid var(--border);
       color: var(--text);
       font-weight: 700;
-      font-size: 0.82rem;
+      font-size: 0.76rem;
       display: grid;
       place-content: center;
       flex-shrink: 0;
       font-family: ui-monospace, "JetBrains Mono", monospace;
+    }
+
+    .game-card.active .game-avatar {
+      color: var(--ok);
+      border-color: color-mix(in oklab, var(--ok), var(--border) 50%);
     }
 
     .game-title-wrap {
@@ -512,7 +527,7 @@
 
     .game-title {
       font-weight: 650;
-      font-size: 0.94rem;
+      font-size: 0.9rem;
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
@@ -520,19 +535,37 @@
     }
 
     .game-sub {
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       color: var(--muted);
-      font-family: ui-monospace, "JetBrains Mono", monospace;
-      margin-block-start: 0.15rem;
+      margin-block-start: 0.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .game-card-foot {
-      display: flex;
-      align-items: safe center;
-      justify-content: space-between;
-      gap: 0.5rem;
-      padding-block-start: 0.75rem;
-      border-block-start: 1px solid var(--border);
+    .card-action {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding-block: 0.28rem;
+      padding-inline: 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: background-color 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+    }
+
+    .game-card:hover:not(.active) .card-action {
+      background: var(--cta-bg);
+      color: var(--cta-text);
+      border-color: transparent;
+    }
+
+    .game-card.active .card-action {
+      color: var(--ok);
+      border-color: color-mix(in oklab, var(--ok), var(--border) 55%);
+      background: color-mix(in oklab, var(--ok), transparent 88%);
     }
 
     /* Restrained Buttons per www.leigod.com (--el-button) */
@@ -726,10 +759,6 @@
       </div>
 
       <div class="nav-actions">
-        <label class="inline-check" style="margin-inline-end: 0.35rem;">
-          <input type="checkbox" id="auto-poll" checked onchange="toggleAutoPoll()">
-          <span>自动刷新 (2s)</span>
-        </label>
         <button class="btn-sm" onclick="runDiagnostics()">网络自检</button>
         <button class="btn-sm" onclick="document.getElementById('settings-dialog').showModal()">账号与设置</button>
       </div>
@@ -740,17 +769,12 @@
       <!-- Left: Status Core -->
       <article class="matte-card hero-core">
         <div class="orb-row">
-          <div id="orb-wrap" class="orb-wrap active">
+          <div id="orb-wrap" class="orb-wrap idle">
             <svg class="orb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg>
           </div>
           <div class="hero-status-info">
-            <span class="hero-eyebrow" id="hero-eyebrow">TUN 透明路由引擎</span>
-            <h1 class="hero-headline" id="stat-acc">正在检测加速状态...</h1>
-            <div class="hero-meta-pills">
-              <span class="mono-tag" id="stat-tun">tun_PC</span>
-              <span class="mono-tag" id="stat-mac">02:da:32:db:9c:75</span>
-              <span class="mono-tag" id="stat-fw">mangle 0x102</span>
-            </div>
+            <span class="hero-eyebrow" id="hero-eyebrow">点击下方区服即可开启加速</span>
+            <h1 class="hero-headline" id="stat-acc">待机就绪</h1>
           </div>
         </div>
 
@@ -765,15 +789,12 @@
           </div>
           <div class="strip-item">
             <span class="strip-label">外网探测状态</span>
-            <span class="strip-val" id="stat-netstate">正常</span>
+            <span class="strip-val" id="stat-netstate">连通正常</span>
           </div>
         </div>
 
         <div class="hero-actions">
-          <button class="btn-primary" onclick="pauseAccountTime()">停止加速并暂停时长</button>
-          <button onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复隧道</button>
-          <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停隧道</button>
-          <button class="btn-danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">断开隧道</button>
+          <button id="hero-main-btn" class="btn-primary" onclick="handleHeroMainAction()">启动全球智能加速 (AUTO)</button>
         </div>
       </article>
 
@@ -802,8 +823,8 @@
           </div>
 
           <div class="telemetry-foot">
-            <span id="stat-traffic">累计转发: RX 0 B / TX 0 B</span>
-            <span id="stat-udp6066">6066/udp 正常</span>
+            <span id="stat-traffic">累计: RX 0 B / TX 0 B</span>
+            <span id="stat-udp6066">监听正常 (6066/udp)</span>
           </div>
         </article>
 
@@ -813,12 +834,11 @@
               <span class="strip-label">雷神账号时长</span>
               <span id="acct-badge" class="pill warn"><span class="pill-dot"></span><span id="acct-badge-text">未配置 Token</span></span>
             </div>
-            <div class="acct-time" id="acct-time-text">点击右侧“配置 Token”开启时长暂停</div>
+            <div class="acct-time" id="acct-time-text">点击右上角“账号与设置”配置 Token</div>
             <div class="acct-sub" id="acct-sub-text">已启用：关机 / 停止服务时自动暂停账号时长</div>
           </div>
           <div class="nav-actions">
-            <button class="btn-sm" onclick="recoverAccountTime()">恢复时长</button>
-            <button class="btn-sm" onclick="document.getElementById('settings-dialog').showModal()">配置 Token</button>
+            <button id="acct-toggle-btn" class="btn-sm" onclick="recoverAccountTime()">恢复时长</button>
           </div>
         </article>
       </div>
@@ -827,8 +847,8 @@
     <!-- Regional Universal Presets Grid -->
     <section aria-labelledby="games-heading">
       <div class="section-bar">
-        <h2 class="section-title" id="games-heading">通用地区加速（支持全平台外服游戏，一键恢复时长并启动）</h2>
-        <span class="pill" id="profiles-count">0 个地区</span>
+        <h2 class="section-title" id="games-heading">选择加速区服</h2>
+        <span class="pill" id="profiles-count">10 个区服</span>
       </div>
       <div class="games-grid" id="games-grid"></div>
     </section>
@@ -862,7 +882,12 @@
     </div>
 
     <div class="dialog-section">
-      <h3>2. SteamDeck 插件绑定凭证 & 宿主机维护</h3>
+      <h3>2. 宿主机网卡、防火墙与底层隧道维护</h3>
+      <div class="hero-meta-pills" style="margin-block-end: 0.75rem;">
+        <span class="mono-tag" id="stat-tun">未创建</span>
+        <span class="mono-tag" id="stat-mac">02:da:32:db:9c:75</span>
+        <span class="mono-tag" id="stat-fw">mangle 规则净空</span>
+      </div>
       <div class="form-grid">
         <label>
           设备插件 Token (accelerator.ini)
@@ -874,9 +899,12 @@
         </label>
       </div>
       <div class="nav-actions">
-        <button class="btn-sm" onclick="restartPluginService()">重启加速守护服务 (systemctl)</button>
-        <button class="btn-sm" onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复设备绑定</button>
-        <button class="btn-sm btn-danger" onclick="cleanupNetRules()">清理残留 iptables / ipset 规则</button>
+        <button class="btn-sm" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复隧道</button>
+        <button class="btn-sm" onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停隧道</button>
+        <button class="btn-sm" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">断开隧道</button>
+        <button class="btn-sm" onclick="restartPluginService()">重启守护服务</button>
+        <button class="btn-sm" onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复绑定</button>
+        <button class="btn-sm btn-danger" onclick="cleanupNetRules()">清理防火墙规则</button>
       </div>
     </div>
 
@@ -936,6 +964,9 @@
     let lastTx = null;
     let lastStatTime = null;
     let savedProfiles = [];
+    let activeAreaCode = '';
+    let isAccelerating = false;
+    let isAccountPaused = true;
     let toastTimer = null;
     const speedHistory = new Array(28).fill(0);
 
@@ -1048,18 +1079,26 @@
           const orb = document.getElementById('orb-wrap');
           const accEl = document.getElementById('stat-acc');
           const eyeEl = document.getElementById('hero-eyebrow');
+          const mainBtn = document.getElementById('hero-main-btn');
           if (activeItem) {
+            isAccelerating = true;
             orb.className = 'orb-wrap active';
-            const area = String(activeItem.area || 'HK').toUpperCase();
+            const area = String(activeItem.area || activeAreaCode || 'HK').toUpperCase();
+            activeAreaCode = area;
             const matchProf = savedProfiles.find(p => String(p.area || '').toUpperCase() === area);
-            const gName = matchProf ? matchProf.name : `通用游戏专线 · ${area}`;
-            accEl.textContent = gName;
+            const gName = matchProf ? matchProf.name.split('·')[0].trim() : `${area} 游戏专线`;
+            accEl.textContent = `${gName} · 加速中`;
             eyeEl.textContent = 'TUN 透明加速运行中';
+            mainBtn.textContent = '停止加速并暂停时长';
           } else {
+            isAccelerating = false;
+            activeAreaCode = '';
             orb.className = 'orb-wrap idle';
-            accEl.textContent = '待机就绪 (未开启加速)';
-            eyeEl.textContent = '点击下方地区卡片即可开启通用游戏加速';
+            accEl.textContent = '待机就绪';
+            eyeEl.textContent = '点击下方区服卡片即可一键开启加速';
+            mainBtn.textContent = '启动全球智能加速 (AUTO)';
           }
+          renderProfiles(savedProfiles);
         }
       } else if (cmd === 'GETNETWORKSTATE' || cmd === 'NETWORKSTATE') {
         const ns = d.networkState || d;
@@ -1071,7 +1110,7 @@
 
     function renderProfiles(profiles) {
       savedProfiles = profiles || [];
-      document.getElementById('profiles-count').textContent = `${savedProfiles.length} 个地区`;
+      document.getElementById('profiles-count').textContent = `${savedProfiles.length} 个区服`;
       const grid = document.getElementById('games-grid');
       if (!savedProfiles.length) {
         grid.innerHTML = `<div class="matte-card" style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
@@ -1081,27 +1120,31 @@
       }
       grid.innerHTML = savedProfiles.map((p, idx) => {
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
-        const title = escapeHtml(p.name || p.id);
+        const cleanTitle = escapeHtml((p.name || p.id).split('·')[0].trim());
         const nodes = Number(p.nodeCount || 6);
+        const isActive = isAccelerating && activeAreaCode === area;
         const subDesc = area === 'AUTO'
-          ? `覆盖全球 ${nodes} 个节点 · 按游戏服 IP 自动匹配港/日/韩/台/美/欧专线`
-          : `${nodes} 个专线节点 · 海外游戏 IP 锁定 ${area} 专线 (保留黑名单)`;
-        return `<article class="game-card">
+          ? `${nodes} 个全球节点 · 按目标 IP 自动选区`
+          : `${nodes} 个专线节点`;
+        return `<article class="game-card${isActive ? ' active' : ''}" onclick="startSavedProfile(${idx})">
           <div class="game-card-head">
             <div class="game-avatar">${area}</div>
             <div class="game-title-wrap">
-              <h3 class="game-title">${title}</h3>
+              <h3 class="game-title">${cleanTitle}</h3>
               <div class="game-sub">${subDesc}</div>
             </div>
           </div>
-          <div class="game-card-foot">
-            <span style="font-size: 0.74rem; color: var(--muted);">更新于 ${escapeHtml(p.updatedAt || '-')}</span>
-            <div class="nav-actions">
-              <button class="btn-sm btn-primary" onclick="startSavedProfile(${idx})">启动加速</button>
-            </div>
-          </div>
+          <span class="card-action">${isActive ? '加速中' : '启动'}</span>
         </article>`;
       }).join('');
+    }
+
+    async function handleHeroMainAction() {
+      if (isAccelerating) {
+        await pauseAccountTime();
+      } else if (savedProfiles.length > 0) {
+        await startSavedProfile(0);
+      }
     }
 
     async function renameSavedProfile(idx) {
@@ -1122,6 +1165,7 @@
     async function startSavedProfile(idx) {
       const p = savedProfiles[idx];
       if (!p) return;
+      activeAreaCode = String(p.area || 'HK').toUpperCase();
       showToast(`正在恢复时长并启动 ${p.name}...`);
       try {
         await fetch('/api/account/recover', { method: 'POST' });
@@ -1151,16 +1195,20 @@
         const badgeText = document.getElementById('acct-badge-text');
         const timeEl = document.getElementById('acct-time-text');
         const subEl = document.getElementById('acct-sub-text');
+        const toggleBtn = document.getElementById('acct-toggle-btn');
         if (!data.configured) {
           badge.className = 'pill warn';
           badgeText.textContent = '未配置 Token';
-          timeEl.textContent = '点击右侧“配置 Token”开启时长管理';
+          timeEl.textContent = '点击右上角“账号与设置”配置 Token';
+          toggleBtn.textContent = '配置 Token';
+          toggleBtn.onclick = () => document.getElementById('settings-dialog').showModal();
           return;
         }
         const r = data.response || {};
         if (r.code === 0 && r.data) {
           const d = r.data;
           const paused = Number(d.pause_status_id) === 1;
+          isAccountPaused = paused;
           const sec = Number(d.expiry_time_samp || d.user_pause_time || 0);
           const hours = Math.floor(sec / 3600);
           const mins = Math.floor((sec % 3600) / 60);
@@ -1168,6 +1216,8 @@
           badgeText.textContent = paused ? '已暂停 (不扣费)' : '计时消耗中';
           timeEl.textContent = sec > 0 ? `剩余 ${hours} 小时 ${mins} 分` : (d.expiry_time || '已登录');
           subEl.textContent = `账号: ${d.nickname || d.mobile || '已认证'} · 关机自动暂停已开启`;
+          toggleBtn.textContent = paused ? '恢复时长' : '暂停时长';
+          toggleBtn.onclick = paused ? recoverAccountTime : pauseAccountTime;
         } else {
           badge.className = 'pill err';
           badgeText.textContent = 'Token 过期';
@@ -1367,19 +1417,8 @@
       await sendCmd('DIAGNOSEINTERNET', {}, false);
     }
 
-    function toggleAutoPoll() {
-      const enabled = document.getElementById('auto-poll').checked;
-      if (pollTimer) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-      }
-      if (enabled) {
-        pollTimer = setInterval(pollTick, 2000);
-      }
-    }
-
     refreshAll();
-    toggleAutoPoll();
+    pollTimer = setInterval(pollTick, 2000);
   </script>
 </body>
 </html>
