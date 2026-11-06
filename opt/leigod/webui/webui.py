@@ -182,6 +182,46 @@ KNOWN_GAMES = {
     "2c92a19186fe5b3101872bf28884002a": "暗黑破坏神 IV (Diablo IV)",
 }
 
+DOMAIN_HINTS = (
+    ("blizzard.com", "暴雪战网专线"),
+    ("battle.net", "暴雪战网专线"),
+    ("steam", "Steam 专线"),
+    ("ea.com", "EA 专线"),
+    ("ubisoft.com", "育碧 Ubi 专线"),
+    ("epicgames.com", "Epic 专线"),
+    ("rockstargames.com", "R星 专线"),
+    ("playstation", "PSN 主机专线"),
+    ("xboxlive.com", "Xbox 主机专线"),
+    ("nintendo", "Switch 主机专线"),
+)
+
+
+def infer_game_title(game_id: str, parsed_conf: dict, dev_key: str = "PC") -> str:
+    """Resolve human-readable game title from KNOWN_GAMES or rule domain hints."""
+    if game_id in KNOWN_GAMES:
+        return KNOWN_GAMES[game_id]
+    rules = parsed_conf.get("rules") if isinstance(parsed_conf, dict) else None
+    if isinstance(rules, list):
+        for r in rules:
+            hosts = r.get("host") if isinstance(r, dict) else None
+            if isinstance(hosts, list):
+                joined = " ".join(str(h).lower() for h in hosts)
+                for kw, label in DOMAIN_HINTS:
+                    if kw in joined:
+                        return f"{label} ({game_id[-4:]})"
+    return f"{dev_key} 专线配置 #{game_id[-4:]}"
+
+
+def is_auto_placeholder_name(name: str) -> bool:
+    if not name:
+        return True
+    return (
+        name.startswith("PC 加速 (")
+        or name.startswith("PC 游戏 #")
+        or name.startswith("游戏 #")
+        or "专线配置 #" in name
+    )
+
 
 def scan_and_capture_active_profiles() -> list:
     """Scan /opt/leigod/config and daemon's PrivateTmp (/proc/<pid>/root/tmp/acc) for active *_acc_conf.json."""
@@ -199,6 +239,21 @@ def scan_and_capture_active_profiles() -> list:
         pass
 
     changed = False
+
+    # Retroactively upgrade any existing placeholder names in saved_profiles.json
+    for p in profiles:
+        old_name = str(p.get("name") or "")
+        gid = str(p.get("gameId") or "")
+        area = str(p.get("area") or "hk").upper()
+        if is_auto_placeholder_name(old_name) and gid:
+            try:
+                conf_obj = json.loads(p["conf"]) if isinstance(p.get("conf"), str) else (p.get("conf") or {})
+            except Exception:
+                conf_obj = {}
+            new_title = f"{infer_game_title(gid, conf_obj)} · {area}"
+            if new_title != old_name:
+                p["name"] = new_title
+                changed = True
     core_meta = {}
     for d in candidate_dirs:
         core_file = d / "acc_core_conf.json"
@@ -220,7 +275,7 @@ def scan_and_capture_active_profiles() -> list:
                         catalog = int(dev_val.get("device_type") or dev_val.get("catalog_type") or 2)
                         sub_catalog = int(dev_val.get("sub_type") or 0)
                         prof_id = f"{catalog}-{sub_catalog}-{game_id}-{game_area}"
-                        title = KNOWN_GAMES.get(game_id, f"{dev_key} 游戏 #{game_id[:8]}")
+                        title = infer_game_title(game_id, parsed, dev_key)
                         entry = {
                             "id": prof_id,
                             "name": f"{title} · {game_area.upper()}",
@@ -235,7 +290,7 @@ def scan_and_capture_active_profiles() -> list:
                             for idx, old in enumerate(profiles):
                                 if old.get("id") == prof_id:
                                     old_name = old.get("name", "")
-                                    if old_name and not old_name.startswith("PC 加速 ("):
+                                    if old_name and not is_auto_placeholder_name(old_name):
                                         entry["name"] = old_name
                                     if old.get("conf") != entry["conf"] or old_name != entry["name"]:
                                         profiles[idx] = entry

@@ -1082,12 +1082,16 @@
       grid.innerHTML = savedProfiles.map((p, idx) => {
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
         const title = escapeHtml(p.name || p.id);
+        const isGeneric = (p.name || '').includes('专线配置 #');
+        const subHint = isGeneric
+          ? `手机端仅下发 ID (${escapeHtml(String(p.gameId || '-').slice(-6))}) · 点击重命名可备注游戏名`
+          : `游戏 ID: ${escapeHtml(String(p.gameId || '-').slice(0, 16))}...`;
         return `<article class="game-card">
           <div class="game-card-head">
             <div class="game-avatar">${area}</div>
             <div class="game-title-wrap">
-              <h3 class="game-title" title="${title}">${title}</h3>
-              <div class="game-sub">ID: ${escapeHtml(String(p.gameId || '-').slice(0, 16))}...</div>
+              <h3 class="game-title" title="点击修改名称：${title}" style="cursor: pointer;" onclick="renameSavedProfile(${idx})">${title}</h3>
+              <div class="game-sub">${subHint}</div>
             </div>
           </div>
           <div class="game-card-foot">
