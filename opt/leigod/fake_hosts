@@ -1,0 +1,6 @@
+127.0.0.1 localhost
+::1 localhost
+0.0.0.0 log.leigod.com
+0.0.0.0 report-api.xxghh.biz
+0.0.0.0 opapi2.xxghh.biz
+0.0.0.0 opapi.nn.com

@@ -62,6 +62,7 @@ InaccessiblePaths=-/usr/bin/poweroff
 BindReadOnlyPaths=/opt/leigod/fake_product_name:/sys/class/dmi/id/product_name
 BindReadOnlyPaths=/opt/leigod/fake_os-release:/etc/os-release
 BindReadOnlyPaths=/opt/leigod/fake_ps:/usr/bin/ps
+BindReadOnlyPaths=/opt/leigod/fake_hosts:/etc/hosts
 
 [Install]
 WantedBy=multi-user.target

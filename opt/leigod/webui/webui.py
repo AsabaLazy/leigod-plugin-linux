@@ -213,6 +213,35 @@ def infer_game_title(game_id: str, parsed_conf: dict, dev_key: str = "PC") -> st
     return "通用游戏加速"
 
 
+def sanitize_acc_conf(conf_input) -> tuple[str, dict, bool]:
+    """Disable all local telemetry/reporting in conf except tunnel heartbeat ('heart')."""
+    try:
+        parsed = json.loads(conf_input) if isinstance(conf_input, str) else dict(conf_input)
+    except Exception:
+        return (conf_input if isinstance(conf_input, str) else json.dumps(conf_input)), {}, False
+
+    modified = False
+    report = parsed.get("report")
+    if isinstance(report, dict):
+        for k, v in report.items():
+            if k == "heart" or not isinstance(v, dict):
+                continue
+            if v.get("enable") is not False or v.get("url"):
+                v["enable"] = False
+                v["interval"] = 0
+                v["url"] = ""
+                modified = True
+
+    log_cfg = parsed.get("log")
+    if isinstance(log_cfg, dict):
+        if log_cfg.get("level") != "none" or log_cfg.get("outFile") is not False:
+            log_cfg["level"] = "none"
+            log_cfg["outFile"] = False
+            modified = True
+
+    return json.dumps(parsed, ensure_ascii=False), parsed, modified
+
+
 def is_auto_placeholder_name(name: str) -> bool:
     if not name:
         return True
@@ -241,16 +270,16 @@ def scan_and_capture_active_profiles() -> list:
 
     changed = False
 
-    # Retroactively upgrade any existing placeholder names in saved_profiles.json
+    # Retroactively upgrade placeholder names and strip telemetry from saved_profiles.json
     for p in profiles:
         old_name = str(p.get("name") or "")
         gid = str(p.get("gameId") or "")
         area = str(p.get("area") or "hk").upper()
+        clean_str, conf_obj, conf_mod = sanitize_acc_conf(p.get("conf") or "{}")
+        if conf_mod:
+            p["conf"] = clean_str
+            changed = True
         if is_auto_placeholder_name(old_name) and gid:
-            try:
-                conf_obj = json.loads(p["conf"]) if isinstance(p.get("conf"), str) else (p.get("conf") or {})
-            except Exception:
-                conf_obj = {}
             new_title = f"{infer_game_title(gid, conf_obj)} · {area}"
             if new_title != old_name:
                 p["name"] = new_title
@@ -262,14 +291,17 @@ def scan_and_capture_active_profiles() -> list:
             try:
                 core_meta = json.loads(core_file.read_text(encoding="utf-8"))
                 acc_list = core_meta.get("acceleration") or []
+                core_mod = False
                 for item in acc_list:
                     if not isinstance(item, dict):
                         continue
                     for dev_key, dev_val in item.items():
                         if not isinstance(dev_val, dict) or not dev_val.get("acc_conf"):
                             continue
-                        raw_text = dev_val["acc_conf"]
-                        parsed = json.loads(raw_text) if isinstance(raw_text, str) else raw_text
+                        raw_text, parsed, was_mod = sanitize_acc_conf(dev_val["acc_conf"])
+                        if was_mod:
+                            dev_val["acc_conf"] = raw_text
+                            core_mod = True
                         game_info = parsed.get("game") or {}
                         game_id = str(game_info.get("id") or dev_val.get("server") or dev_key)
                         game_area = str(game_info.get("area") or dev_val.get("game_area") or "默认区服")
@@ -300,6 +332,11 @@ def scan_and_capture_active_profiles() -> list:
                             profiles.insert(0, entry)
                             existing_keys.add(prof_id)
                             changed = True
+                if core_mod:
+                    try:
+                        core_file.write_text(json.dumps(core_meta, ensure_ascii=False), encoding="utf-8")
+                    except Exception:
+                        pass
                 break
             except Exception:
                 pass
@@ -559,10 +596,12 @@ class WebUIHandler(BaseHTTPRequestHandler):
                         },
                     )
                     return
-                # If user triggers STARTACC manually, also save it to profiles library
+                # If user triggers STARTACC manually, sanitize telemetry and save to profiles library
                 if isinstance(req_obj, dict) and str(req_obj.get("cmd", "")).upper() in ("STARTACC", "START"):
                     d = req_obj.get("data") or {}
                     if isinstance(d, dict) and d.get("conf"):
+                        clean_conf, _, _ = sanitize_acc_conf(d["conf"])
+                        d["conf"] = clean_conf
                         profiles = load_saved_profiles()
                         prof_id = f"{d.get('catalog', 1)}-{d.get('subCatalog', 1)}-manual"
                         if not any(p.get("id") == prof_id for p in profiles):
@@ -575,7 +614,7 @@ class WebUIHandler(BaseHTTPRequestHandler):
                                     "subCatalog": int(d.get("subCatalog", 1)),
                                     "gameId": "-",
                                     "area": "-",
-                                    "conf": d["conf"] if isinstance(d["conf"], str) else json.dumps(d["conf"]),
+                                    "conf": clean_conf,
                                     "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
                                 },
                             )
