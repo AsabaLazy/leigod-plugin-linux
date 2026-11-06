@@ -1083,12 +1083,15 @@
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
         const title = escapeHtml(p.name || p.id);
         const nodes = Number(p.nodeCount || 6);
+        const subDesc = area === 'AUTO'
+          ? `覆盖全球 ${nodes} 个节点 · 按游戏服 IP 自动匹配港/日/韩/台/美/欧专线`
+          : `${nodes} 个专线节点 · 海外游戏 IP 锁定 ${area} 专线 (保留黑名单)`;
         return `<article class="game-card">
           <div class="game-card-head">
             <div class="game-avatar">${area}</div>
             <div class="game-title-wrap">
               <h3 class="game-title">${title}</h3>
-              <div class="game-sub">${nodes} 个专线节点 · 海外游戏 IP 自动兜底 (保留黑名单)</div>
+              <div class="game-sub">${subDesc}</div>
             </div>
           </div>
           <div class="game-card-foot">

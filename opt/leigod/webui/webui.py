@@ -179,18 +179,22 @@ def pause_account_time(account_token: str, router_token: str = "") -> dict:
 
 
 AREA_NAMES = {
+    "auto": "全球智能分流",
     "hk": "中国香港专线",
     "jp": "日本东京专线",
     "kr": "韩国首尔专线",
     "tw": "中国台湾专线",
+    "sea": "东南亚新加坡专线",
     "us": "北美通用专线",
     "eu": "欧洲通用专线",
     "de": "德国法兰克福专线",
-    "sea": "东南亚新加坡专线",
     "ru": "俄罗斯专线",
     "au": "澳洲悉尼专线",
     "global": "全球通用专线",
 }
+
+PRESET_AREAS = ["auto", "hk", "jp", "kr", "tw", "sea", "us", "eu", "ru", "au"]
+DEAD_GEO_ENDPOINTS = ("175.178.53.171:5438", "39.173.180.27:5438")
 
 
 def format_region_title(area: str) -> str:
@@ -202,7 +206,7 @@ def format_region_title(area: str) -> str:
 def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str, dict, bool]:
     """Disable all local telemetry/reporting in conf except tunnel heartbeat ('heart') and merge rules."""
     try:
-        parsed = json.loads(conf_input) if isinstance(conf_input, str) else dict(conf_input)
+        parsed = json.loads(conf_input) if isinstance(conf_input, str) else json.loads(json.dumps(conf_input))
     except Exception:
         return (conf_input if isinstance(conf_input, str) else json.dumps(conf_input)), {}, False
 
@@ -235,31 +239,67 @@ def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str,
             limit_cfg["data_kb"] = 16384
             modified = True
 
-    base_geo_rules = [
-        {"host": ["geo:cn"], "serv": ["direct"]},
-        {"host": ["geo:cn!"], "serv": ["default"]},
-    ]
-    if parsed.get("rules") != base_geo_rules:
-        parsed["rules"] = base_geo_rules
+    ipdata_cfg = parsed.get("ipdata")
+    if isinstance(ipdata_cfg, dict):
+        xdb_path = "/opt/leigod/config/ipdatacloud_country.xdb"
+        if ipdata_cfg.get("path") != xdb_path:
+            ipdata_cfg["path"] = xdb_path
+            modified = True
+
+    game_cfg = parsed.get("game")
+    is_auto = isinstance(game_cfg, dict) and str(game_cfg.get("area") or "").lower() == "auto"
+    if isinstance(game_cfg, dict):
+        want_dyn = bool(is_auto)
+        if game_cfg.get("dyn_line") is not want_dyn:
+            game_cfg["dyn_line"] = want_dyn
+            modified = True
+
+    if is_auto:
+        target_rules = [
+            {"host": ["geo:cn"], "serv": ["direct"]},
+        ]
+    else:
+        target_rules = [
+            {"host": ["geo:cn"], "serv": ["direct"]},
+            {"host": ["geo:cn!"], "serv": ["default"]},
+        ]
+    if parsed.get("rules") != target_rules:
+        parsed["rules"] = target_rules
         modified = True
 
     return json.dumps(parsed, ensure_ascii=False), parsed, modified
 
 
 def consolidate_regional_profiles(profiles: list) -> tuple[list, bool]:
-    """Deduplicate profiles into 1 universal preset per region (area)."""
+    """Deduplicate profiles and synthesize full preset regions from server.geo."""
     by_area = {}
+    parsed_by_area = {}
+    merged_geo = {}
     changed = False
+
     for p in profiles:
         area = str(p.get("area") or "").lower().strip()
         if not area or area == "-":
             changed = True
             continue
-        reg_id = f"region-{area}"
         clean_str, conf_obj, was_mod = sanitize_acc_conf(p.get("conf") or "{}")
+        srv_geo = (conf_obj.get("server") or {}).get("geo") or {}
+        if isinstance(srv_geo, dict):
+            for gk, gv in srv_geo.items():
+                if not isinstance(gv, list):
+                    continue
+                valid_uris = [u for u in gv if not any(dead in str(u) for dead in DEAD_GEO_ENDPOINTS)]
+                if valid_uris:
+                    cur = merged_geo.setdefault(gk, [])
+                    for u in valid_uris:
+                        if u not in cur:
+                            cur.append(u)
+
+        reg_id = f"region-{area}"
         node_count = len((conf_obj.get("server") or {}).get("allNode") or [])
         expected_name = format_region_title(area)
-        if area not in by_area:
+        existing = by_area.get(area)
+        if not existing or node_count > int(existing.get("nodeCount") or 0):
             new_entry = {
                 "id": reg_id,
                 "name": expected_name,
@@ -276,13 +316,101 @@ def consolidate_regional_profiles(profiles: list) -> tuple[list, bool]:
                 or p.get("name") != expected_name
                 or was_mod
                 or p.get("nodeCount") != node_count
+                or existing is not None
             ):
                 changed = True
             by_area[area] = new_entry
+            parsed_by_area[area] = conf_obj
         else:
             changed = True
 
-    return list(by_area.values()), changed
+    base_area = "hk" if "hk" in parsed_by_area else ("jp" if "jp" in parsed_by_area else next(iter(parsed_by_area), None))
+    if base_area and merged_geo:
+        base_entry = by_area[base_area]
+        base_conf = parsed_by_area[base_area]
+        default_sign = ((base_conf.get("user") or {}).get("speed_sign")) or "6aedef9ce4b01aa456e120f2"
+        now_ts = base_entry.get("updatedAt") or time.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Ensure all existing profiles also carry the cleaned merged_geo
+        for area_key, conf_obj in list(parsed_by_area.items()):
+            srv = conf_obj.get("server")
+            if isinstance(srv, dict) and srv.get("geo") != merged_geo:
+                srv["geo"] = merged_geo
+                clean_str, conf_obj, _ = sanitize_acc_conf(conf_obj)
+                parsed_by_area[area_key] = conf_obj
+                by_area[area_key]["conf"] = clean_str
+                changed = True
+
+        # 1. Synthesize 'auto' (Smart Global Dynamic Geo Routing via ipdatacloud_country.xdb)
+        if "auto" not in by_area:
+            auto_conf = json.loads(json.dumps(base_conf))
+            auto_conf.setdefault("game", {})["area"] = "auto"
+            auto_conf["game"]["dyn_line"] = True
+            auto_conf.setdefault("server", {})["geo"] = merged_geo
+            auto_str, auto_parsed, _ = sanitize_acc_conf(auto_conf)
+            geo_node_total = sum(len(v) for k, v in merged_geo.items() if k and v != ["direct"])
+            by_area["auto"] = {
+                "id": "region-auto",
+                "name": format_region_title("auto"),
+                "catalog": base_entry["catalog"],
+                "subCatalog": base_entry["subCatalog"],
+                "gameId": base_entry["gameId"],
+                "area": "auto",
+                "nodeCount": geo_node_total,
+                "conf": auto_str,
+                "updatedAt": now_ts,
+            }
+            changed = True
+
+        # 2. Synthesize specific regional presets from merged_geo
+        geo_sources = {
+            "kr": ["kr"],
+            "tw": ["tw"],
+            "sea": ["sea", "MY", "VN"],
+            "us": ["us"],
+            "eu": ["eu", "de"],
+            "ru": ["ru"],
+            "au": ["au"],
+        }
+        for target_area, gkeys in geo_sources.items():
+            if target_area in by_area:
+                continue
+            uris = []
+            for gk in gkeys:
+                for u in merged_geo.get(gk, []):
+                    if u not in uris and u != "direct":
+                        uris.append(u)
+            if not uris:
+                continue
+            syn_conf = json.loads(json.dumps(base_conf))
+            syn_conf.setdefault("game", {})["area"] = target_area
+            syn_conf["game"]["dyn_line"] = False
+            syn_srv = syn_conf.setdefault("server", {})
+            syn_srv["tcp"] = [uris[0]]
+            syn_srv["allNode"] = [{"node": u, "ping": 20, "speed_sign": default_sign} for u in uris]
+            syn_srv["geo"] = merged_geo
+            syn_str, _, _ = sanitize_acc_conf(syn_conf)
+            by_area[target_area] = {
+                "id": f"region-{target_area}",
+                "name": format_region_title(target_area),
+                "catalog": base_entry["catalog"],
+                "subCatalog": base_entry["subCatalog"],
+                "gameId": base_entry["gameId"],
+                "area": target_area,
+                "nodeCount": len(uris),
+                "conf": syn_str,
+                "updatedAt": now_ts,
+            }
+            changed = True
+
+    ordered = []
+    for k in PRESET_AREAS:
+        if k in by_area:
+            ordered.append(by_area.pop(k))
+    for k in sorted(by_area.keys()):
+        ordered.append(by_area[k])
+
+    return ordered, changed
 
 
 def scan_and_capture_active_profiles() -> list:
