@@ -135,17 +135,6 @@
       gap: 0.75rem;
     }
 
-    .brand-mark {
-      inline-size: 34px;
-      block-size: 34px;
-      border-radius: 8px;
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      display: grid;
-      place-content: center;
-      color: var(--text);
-    }
-
     .brand-text {
       display: flex;
       flex-direction: column;
@@ -171,44 +160,25 @@
       gap: 0.5rem;
     }
 
-    /* Pills & Badges — No Glow */
+    /* Status Text Tags — No Dots, No Nested Boxes */
     .pill {
       display: inline-flex;
       align-items: safe center;
-      gap: 0.4rem;
-      padding-block: 0.24rem;
-      padding-inline: 0.65rem;
-      border-radius: 6px;
       font-size: 0.75rem;
       font-weight: 600;
-      border: 1px solid var(--border);
-      background: var(--surface-alt);
       color: var(--muted);
-    }
-
-    .pill-dot {
-      inline-size: 6px;
-      block-size: 6px;
-      border-radius: 50%;
-      background: currentColor;
     }
 
     .pill.ok {
       color: var(--ok);
-      border-color: color-mix(in oklab, var(--ok), var(--border) 65%);
-      background: color-mix(in oklab, var(--ok), transparent 90%);
     }
 
     .pill.warn {
       color: var(--warn);
-      border-color: color-mix(in oklab, var(--warn), var(--border) 65%);
-      background: color-mix(in oklab, var(--warn), transparent 90%);
     }
 
     .pill.err {
       color: var(--err);
-      border-color: color-mix(in oklab, var(--err), var(--border) 65%);
-      background: color-mix(in oklab, var(--err), transparent 90%);
     }
 
     /* Hero Bento Grid */
@@ -227,8 +197,8 @@
     .matte-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem;
+      border-radius: 12px;
+      padding: 1.4rem 1.5rem;
       min-inline-size: 0;
     }
 
@@ -237,51 +207,19 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1.4rem;
-    }
-
-    .orb-row {
-      display: flex;
-      align-items: safe center;
-      gap: 1.15rem;
-    }
-
-    .orb-wrap {
-      inline-size: 56px;
-      block-size: 56px;
-      border-radius: 12px;
-      flex-shrink: 0;
-      display: grid;
-      place-content: center;
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-    }
-
-    .orb-wrap.active {
-      border-color: color-mix(in oklab, var(--ok), var(--border) 50%);
-      background: color-mix(in oklab, var(--ok), var(--surface-alt) 88%);
-    }
-
-    .orb-icon {
-      inline-size: 26px;
-      block-size: 26px;
-      color: var(--ok);
-    }
-
-    .orb-wrap.idle .orb-icon {
-      color: var(--muted);
+      gap: 1.25rem;
     }
 
     .hero-status-info {
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
+      gap: 0.25rem;
       min-inline-size: 0;
     }
 
     .hero-eyebrow {
       font-size: 0.74rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
       color: var(--muted);
       font-weight: 600;
     }
@@ -304,11 +242,6 @@
     .mono-tag {
       font-family: ui-monospace, "JetBrains Mono", monospace;
       font-size: 0.74rem;
-      padding-block: 0.15rem;
-      padding-inline: 0.5rem;
-      border-radius: 6px;
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
       color: var(--muted);
       font-variant-numeric: tabular-nums;
     }
@@ -317,17 +250,14 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0.75rem;
-      padding-block: 0.85rem;
-      padding-inline: 1rem;
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      padding-block: 0.9rem;
+      border-block: 1px solid var(--border);
     }
 
     .strip-item {
       display: flex;
       flex-direction: column;
-      gap: 0.1rem;
+      gap: 0.15rem;
     }
 
     .strip-label {
@@ -363,7 +293,7 @@
       font-size: 0.85rem;
       padding-block: 0.52rem;
       padding-inline: 0.85rem;
-      border-radius: 9px;
+      border-radius: 8px;
       background-color: var(--surface-alt);
       color: var(--text);
       border: 1px solid var(--border);
@@ -381,18 +311,18 @@
     }
 
     .region-select:focus-visible {
-      outline: 2px solid color-mix(in oklab, var(--ok), transparent 40%);
-      outline-offset: 1px;
+      outline: none;
+      border-color: color-mix(in oklab, var(--text), var(--border) 50%);
     }
 
     select::picker(select) {
       background-color: var(--surface);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 0.38rem;
-      margin-block-start: 0.35rem;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+      border-radius: 8px;
+      padding: 0.3rem;
+      margin-block-start: 0.3rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
     }
 
     select::picker-icon {
@@ -409,15 +339,15 @@
       align-items: safe center;
       justify-content: space-between;
       gap: 0.65rem;
-      padding-block: 0.48rem;
+      padding-block: 0.46rem;
       padding-inline: 0.65rem;
-      border-radius: 7px;
+      border-radius: 6px;
       font-size: 0.83rem;
       font-weight: 550;
       color: var(--text);
       background-color: transparent;
       cursor: pointer;
-      transition: background-color 0.12s ease, color 0.12s ease;
+      transition: background-color 0.12s ease;
     }
 
     select option:hover,
@@ -428,7 +358,7 @@
     }
 
     select option:checked {
-      background-color: color-mix(in oklab, var(--ok), var(--surface-alt) 88%);
+      background-color: var(--surface-hover);
       color: var(--text);
       font-weight: 650;
     }
@@ -436,28 +366,6 @@
     select option::checkmark {
       color: var(--ok);
       font-weight: 700;
-    }
-
-    .opt-row {
-      display: inline-flex;
-      align-items: safe center;
-      gap: 0.55rem;
-      flex: 1;
-      min-inline-size: 0;
-    }
-
-    .opt-code {
-      font-family: ui-monospace, "JetBrains Mono", monospace;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding-block: 0.12rem;
-      padding-inline: 0.42rem;
-      border-radius: 5px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      min-inline-size: 40px;
-      text-align: center;
     }
 
     .opt-nodes {
@@ -478,14 +386,14 @@
 
     .custom-select-menu {
       position: absolute;
-      inset-block-start: calc(100% + 6px);
+      inset-block-start: calc(100% + 4px);
       inset-inline: 0;
       z-index: 60;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 0.38rem;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.48);
+      border-radius: 8px;
+      padding: 0.3rem;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
       max-block-size: 320px;
       overflow-y: auto;
       display: grid;
@@ -501,9 +409,9 @@
       align-items: safe center;
       justify-content: space-between;
       gap: 0.65rem;
-      padding-block: 0.48rem;
+      padding-block: 0.46rem;
       padding-inline: 0.65rem;
-      border-radius: 7px;
+      border-radius: 6px;
       font-size: 0.83rem;
       font-weight: 550;
       color: var(--text);
@@ -519,13 +427,8 @@
     }
 
     .custom-opt.selected {
-      background: color-mix(in oklab, var(--ok), var(--surface-alt) 88%);
+      background: var(--surface-hover);
       font-weight: 650;
-    }
-
-    .custom-opt.selected .opt-code {
-      color: var(--ok);
-      border-color: color-mix(in oklab, var(--ok), var(--border) 50%);
     }
 
     #hero-main-btn {
@@ -583,12 +486,10 @@
 
     .sparkline-box {
       inline-size: 100%;
-      block-size: 58px;
-      border-radius: 8px;
-      background: var(--surface-alt);
-      border: 1px solid var(--border);
+      block-size: 54px;
       overflow: hidden;
       position: relative;
+      border-block-end: 1px solid var(--border);
     }
 
     .sparkline-svg {
@@ -809,15 +710,11 @@
     <!-- Top Bar -->
     <header class="navbar">
       <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        </div>
         <div class="brand-text">
           <span class="brand-name">LEIGOD STEAMOS</span>
           <span class="brand-sub" id="nav-sub">Jupiter · v1.3.0.02</span>
         </div>
         <span id="svc-badge" class="pill ok">
-          <span class="pill-dot" aria-hidden="true"></span>
           <span id="svc-badge-text">守护运行中</span>
         </span>
       </div>
@@ -832,14 +729,9 @@
     <section class="bento-hero" aria-label="核心加速控制台">
       <!-- Left: Status Core -->
       <article class="matte-card hero-core">
-        <div class="orb-row">
-          <div id="orb-wrap" class="orb-wrap idle">
-            <svg class="orb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg>
-          </div>
-          <div class="hero-status-info">
-            <span class="hero-eyebrow" id="hero-eyebrow">选择下方区服并点击启动加速</span>
-            <h1 class="hero-headline" id="stat-acc">待机就绪</h1>
-          </div>
+        <div class="hero-status-info">
+          <span class="hero-eyebrow" id="hero-eyebrow">选择下方区服并点击启动加速</span>
+          <h1 class="hero-headline" id="stat-acc">待机就绪</h1>
         </div>
 
         <div class="hero-metrics-strip">
@@ -860,9 +752,6 @@
         <div class="hero-actions">
           <div class="custom-select-wrap" id="region-select-wrap">
             <select id="region-select" name="region" class="region-select" aria-label="选择加速区服" onchange="onRegionSelectChange()">
-              <button>
-                <selectedcontent></selectedcontent>
-              </button>
               <option value="0">全球智能分流 · AUTO</option>
             </select>
             <div id="custom-region-menu" class="custom-select-menu" role="listbox" aria-label="选择加速区服" hidden></div>
@@ -905,7 +794,7 @@
           <div class="acct-info">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="strip-label">雷神账号时长</span>
-              <span id="acct-badge" class="pill warn"><span class="pill-dot"></span><span id="acct-badge-text">未配置 Token</span></span>
+              <span id="acct-badge" class="pill warn"><span id="acct-badge-text">未配置 Token</span></span>
             </div>
             <div class="acct-time" id="acct-time-text">点击右上角“账号与设置”配置 Token</div>
             <div class="acct-sub" id="acct-sub-text">已启用：关机 / 停止服务时自动暂停账号时长</div>
@@ -1140,13 +1029,11 @@
         const list = (d.listGameDevices && d.listGameDevices.list) || d.list || (Array.isArray(d) ? d : []);
         if (Array.isArray(list) && list.length > 0) {
           const activeItem = list.find(item => Number(item.accState) === 1 || Number(item.state) === 1 || item.accState === 'started');
-          const orb = document.getElementById('orb-wrap');
           const accEl = document.getElementById('stat-acc');
           const eyeEl = document.getElementById('hero-eyebrow');
           const mainBtn = document.getElementById('hero-main-btn');
           if (activeItem) {
             isAccelerating = true;
-            orb.className = 'orb-wrap active';
             const area = String(activeItem.area || activeAreaCode || 'HK').toUpperCase();
             activeAreaCode = area;
             const matchProf = savedProfiles.find(p => String(p.area || '').toUpperCase() === area);
@@ -1157,7 +1044,6 @@
           } else {
             isAccelerating = false;
             activeAreaCode = '';
-            orb.className = 'orb-wrap idle';
             accEl.textContent = '待机就绪';
             eyeEl.textContent = '选择下方区服并点击启动加速';
             mainBtn.textContent = '启动加速';
@@ -1208,19 +1094,19 @@
       if (!sel) return;
       const prevIdx = sel.value;
       if (!savedProfiles.length) {
-        sel.innerHTML = `<button><selectedcontent></selectedcontent></button><option value="-1">暂无区服存档（请先在手机 App 任意点一次加速）</option>`;
+        sel.innerHTML = `<option value="-1">暂无区服存档（请先在手机 App 任意点一次加速）</option>`;
         if (menu) menu.innerHTML = '';
         return;
       }
 
-      sel.innerHTML = `<button><selectedcontent></selectedcontent></button>` + savedProfiles.map((p, idx) => {
+      sel.innerHTML = savedProfiles.map((p, idx) => {
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
         const cleanTitle = escapeHtml((p.name || p.id).split('·')[0].trim());
         const nodes = Number(p.nodeCount || 6);
         if (supportsBaseSelect) {
-          return `<option value="${idx}"><span class="opt-row"><span class="opt-code">${area}</span><span>${cleanTitle}</span><span class="opt-nodes">${nodes} 节点</span></span></option>`;
+          return `<option value="${idx}"><span>${cleanTitle} · ${area}</span><span class="opt-nodes">${nodes} 节点</span></option>`;
         }
-        return `<option value="${idx}">[${area}] ${cleanTitle} (${nodes} 节点)</option>`;
+        return `<option value="${idx}">${cleanTitle} · ${area} (${nodes} 节点)</option>`;
       }).join('');
 
       let targetIdx = 0;
@@ -1241,10 +1127,7 @@
           const nodes = Number(p.nodeCount || 6);
           const isSel = idx === targetIdx;
           return `<button type="button" role="option" aria-selected="${isSel}" class="custom-opt${isSel ? ' selected' : ''}" onclick="selectCustomRegion(${idx})">
-            <span class="opt-row">
-              <span class="opt-code">${area}</span>
-              <span>${cleanTitle}</span>
-            </span>
+            <span>${cleanTitle} · ${area}</span>
             <span class="opt-nodes">${nodes} 节点</span>
           </button>`;
         }).join('');
