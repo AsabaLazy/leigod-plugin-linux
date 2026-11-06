@@ -217,13 +217,38 @@ def read_host_status() -> dict:
                 pass
 
     tun_if = "未创建 (开启加速后生成)"
+    active_tun = ""
     try:
         res = subprocess.run(["ip", "-o", "link", "show", "type", "tun"], capture_output=True, text=True, timeout=2)
-        lines = [line.split(":")[1].strip() for line in res.stdout.splitlines() if ":" in line]
+        lines = [line.split(":")[1].strip().split("@")[0] for line in res.stdout.splitlines() if ":" in line]
         if lines:
             tun_if = ", ".join(lines)
+            active_tun = lines[0]
     except Exception:
         pass
+
+    # Read real traffic counters (prefer active tun interface, fallback to default route interface)
+    traffic_iface = active_tun
+    if not traffic_iface:
+        try:
+            res = subprocess.run(["ip", "route", "show", "default"], capture_output=True, text=True, timeout=2)
+            for part in res.stdout.split():
+                if part == "dev":
+                    idx = res.stdout.split().index("dev")
+                    if idx + 1 < len(res.stdout.split()):
+                        traffic_iface = res.stdout.split()[idx + 1]
+                        break
+        except Exception:
+            pass
+
+    rx_bytes = 0
+    tx_bytes = 0
+    if traffic_iface:
+        try:
+            rx_bytes = int(Path(f"/sys/class/net/{traffic_iface}/statistics/rx_bytes").read_text().strip())
+            tx_bytes = int(Path(f"/sys/class/net/{traffic_iface}/statistics/tx_bytes").read_text().strip())
+        except Exception:
+            pass
 
     version = ""
     ver_ini = LEIGOD_DIR / "config/acc_version.ini"
@@ -258,6 +283,9 @@ def read_host_status() -> dict:
         "service_state": service_state,
         "mac": mac,
         "tun_interface": tun_if,
+        "traffic_iface": traffic_iface,
+        "rx_bytes": rx_bytes,
+        "tx_bytes": tx_bytes,
         "has_gameacc_chain": check_firewall_residuals(),
         "udp_6066": probe_udp_6066(),
         "version": version,
@@ -314,6 +342,14 @@ class WebUIHandler(BaseHTTPRequestHandler):
                     "SHELLEXEC",
                     "SHELL",
                     "UNINSTALLENGINE",
+                    "NEWUPDATEFW",
+                    "NEWUPDATEFWVER",
+                    "NEWMODIFYUBUSSETTINGS",
+                    "NEWMODIFYNETWORKSETTINGS",
+                    "NEWMODIFYDHCPSETTINGS",
+                    "NEWMODIFYWIFISETTINGS",
+                    "MODIFYROUTER",
+                    "MODIFY",
                 ):
                     self._send_json(
                         403,

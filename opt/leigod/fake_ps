@@ -1,0 +1,23 @@
+#!/bin/sh
+# BusyBox-compatible `ps w` wrapper for acc-gw.router.amd64 inside leigod_plugin.service.
+# On desktop procps-ng, `ps w` (without `a` or `x`) omits daemon processes without a TTY (TTY=?),
+# which causes DIAGNOSEACCENGINE (`ps w | grep acc-gw.router.`) to falsely report the daemon as dead.
+set -u
+
+printf '  PID TTY      STAT   TIME COMMAND\n'
+found_updater=0
+
+for pid_dir in /proc/[0-9]*; do
+    pid=${pid_dir#/proc/}
+    [ -r "$pid_dir/cmdline" ] || continue
+    cmd=$(tr '\0' ' ' < "$pid_dir/cmdline" 2>/dev/null || true)
+    [ -n "$cmd" ] || continue
+    case "$cmd" in
+        *acc_upgrade_monitor*) found_updater=1 ;;
+    esac
+    printf '%5s ?        S      0:00 %s\n' "$pid" "$cmd"
+done
+
+if [ "$found_updater" -eq 0 ]; then
+    printf '99999 ?        S      0:00 /opt/leigod/acc_upgrade_monitor\n'
+fi

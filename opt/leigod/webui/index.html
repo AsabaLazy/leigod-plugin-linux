@@ -521,38 +521,9 @@
     }
 
     function connectWs() {
-      const url = document.getElementById('ws-url').value.trim() || defaultWsUrl;
       const badge = document.getElementById('ws-badge');
-      try {
-        if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-          ws.close();
-        }
-        ws = new WebSocket(url);
-        ws.onopen = () => {
-          badge.textContent = 'WebSocket: 直连已就绪';
-          badge.className = 'badge ok';
-        };
-        ws.onclose = () => {
-          badge.textContent = 'WebSocket: 后端代理模式';
-          badge.className = 'badge warn';
-        };
-        ws.onerror = () => {
-          badge.textContent = 'WebSocket: 后端代理模式';
-          badge.className = 'badge warn';
-        };
-        ws.onmessage = (ev) => {
-          try {
-            const msg = JSON.parse(ev.data);
-            msg.data = parseDataField(msg.data);
-            handleIncomingResponse(msg, false);
-          } catch (e) {
-            appendLog('收到原始消息', ev.data);
-          }
-        };
-      } catch (e) {
-        badge.textContent = 'WebSocket: 后端代理模式';
-        badge.className = 'badge warn';
-      }
+      badge.textContent = 'RPC: 安全代理模式 (127.0.0.1:5588)';
+      badge.className = 'badge ok';
     }
 
     async function sendCmd(cmd, dataObj = {}, quiet = false) {
@@ -565,11 +536,6 @@
         err: '',
         data: dataObj
       };
-
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(envelope));
-        return;
-      }
 
       try {
         const resp = await fetch('/api/ws-rpc', {
@@ -767,6 +733,22 @@
           if (!getUserId()) {
             document.getElementById('userid-input').value = info.user_id;
           }
+        }
+        if (info.rx_bytes !== undefined && info.tx_bytes !== undefined) {
+          const rx = Number(info.rx_bytes) || 0;
+          const tx = Number(info.tx_bytes) || 0;
+          const now = Date.now();
+          if (lastRx !== null && lastStatTime !== null && now > lastStatTime) {
+            const dt = (now - lastStatTime) / 1000;
+            const rxRate = Math.max(0, (rx - lastRx) / dt);
+            const txRate = Math.max(0, (tx - lastTx) / dt);
+            document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate)}/s | ↑ ${formatBytes(txRate)}/s`;
+          }
+          lastRx = rx;
+          lastTx = tx;
+          lastStatTime = now;
+          const ifaceLabel = info.traffic_iface ? ` (${info.traffic_iface})` : '';
+          document.getElementById('stat-traffic').textContent = `累计${ifaceLabel}: RX ${formatBytes(rx)} / TX ${formatBytes(tx)}`;
         }
         if (Array.isArray(info.profiles)) {
           renderProfiles(info.profiles);

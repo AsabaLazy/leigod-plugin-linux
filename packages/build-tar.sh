@@ -31,6 +31,7 @@ LEIGOD_CHECKSUM_FILE=$CHECKSUM_FILE \
     sh "$REPO_DIR/scripts/fetch-assets.sh" "$PACKAGE_ROOT/opt/leigod"
 
 install -m 0755 "$REPO_DIR/opt/leigod/steamdeck_acc_monitor.sh" "$PACKAGE_ROOT/opt/leigod/"
+install -m 0755 "$REPO_DIR/opt/leigod/fake_ps" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0755 "$REPO_DIR/opt/leigod/leigod_cleanup_net.sh" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0755 "$REPO_DIR/opt/leigod/leigod_uninstall.sh" "$PACKAGE_ROOT/opt/leigod/"
 install -m 0755 "$REPO_DIR/scripts/device-mac.sh" "$PACKAGE_ROOT/scripts/"

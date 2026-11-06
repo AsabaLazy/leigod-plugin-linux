@@ -151,6 +151,7 @@ install_files() {
     info "Installing files to $BASE..."
     install -d -m 0755 "$BASE/config" "$BASE/webui"
     install -m 0755 "$SCRIPT_DIR/opt/leigod/steamdeck_acc_monitor.sh" "$BASE/"
+    install -m 0755 "$SCRIPT_DIR/opt/leigod/fake_ps" "$BASE/"
     install -m 0755 "$SCRIPT_DIR/opt/leigod/leigod_cleanup_net.sh" "$BASE/"
     install -m 0755 "$SCRIPT_DIR/opt/leigod/leigod_uninstall.sh" "$BASE/"
     install -m 0755 "$SCRIPT_DIR/scripts/device-mac.sh" "$BASE/"
