@@ -305,6 +305,26 @@ class WebUIHandler(BaseHTTPRequestHandler):
         if self.path == "/api/ws-rpc":
             try:
                 req_obj = self._read_json()
+                cmd_upper = str(req_obj.get("cmd", "")).upper() if isinstance(req_obj, dict) else ""
+                if cmd_upper in (
+                    "OPTROUTER",
+                    "OPT",
+                    "NEWREBOOTDEVICE",
+                    "NEWRESETDEVICE",
+                    "SHELLEXEC",
+                    "SHELL",
+                    "UNINSTALLENGINE",
+                ):
+                    self._send_json(
+                        403,
+                        {
+                            "cmd": cmd_upper,
+                            "code": -1,
+                            "err": f"已拦截高危路由器固件指令 {cmd_upper}（该指令在路由器固件中会调用宿主机 reboot/shell）",
+                            "data": {},
+                        },
+                    )
+                    return
                 # If user triggers STARTACC manually, also save it to profiles library
                 if isinstance(req_obj, dict) and str(req_obj.get("cmd", "")).upper() in ("STARTACC", "START"):
                     d = req_obj.get("data") or {}
@@ -346,6 +366,14 @@ class WebUIHandler(BaseHTTPRequestHandler):
                 if script.is_file():
                     subprocess.run(["/bin/sh", str(script)], check=False, timeout=5)
                 self._send_json(200, {"ok": True, "msg": "已清理 GAMEACC 链、策略路由表 99、ipset 与残留 tun 接口"})
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "msg": str(exc)})
+            return
+
+        if self.path == "/api/service-restart":
+            try:
+                subprocess.run(["systemctl", "restart", "leigod_plugin.service"], check=True, timeout=10)
+                self._send_json(200, {"ok": True, "msg": "已安全重启 leigod_plugin.service 守护服务"})
             except Exception as exc:
                 self._send_json(500, {"ok": False, "msg": str(exc)})
             return

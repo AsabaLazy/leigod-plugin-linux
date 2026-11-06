@@ -377,7 +377,7 @@
         <button class="primary" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [1] })">恢复加速 (RESUMEACC)</button>
         <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [1] })">暂停加速 (PAUSEACC)</button>
         <button class="danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [1] })">停止加速 (STOPACC)</button>
-        <button onclick="sendCmd('OPTROUTER', { token: getToken(), method: 'restart' })">重启加速进程 (OPTROUTER)</button>
+        <button onclick="restartPluginService()">重启加速服务 (systemctl)</button>
         <button onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复绑定 (AUTOREPAIRBOUND)</button>
         <button class="danger" onclick="cleanupNetRules()">清理残留 iptables/ipset 规则</button>
       </div>
@@ -698,6 +698,13 @@
       const data = await resp.json();
       appendLog('清理残留网络规则', data);
       await loadHostStatus();
+    }
+
+    async function restartPluginService() {
+      const resp = await fetch('/api/service-restart', { method: 'POST' });
+      const data = await resp.json();
+      appendLog('重启加速服务', data);
+      setTimeout(refreshAll, 1500);
     }
 
     function renderDevices(list) {

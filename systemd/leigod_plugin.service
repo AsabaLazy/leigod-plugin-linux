@@ -46,7 +46,14 @@ RestrictSUIDSGID=true
 RestrictNamespaces=true
 RemoveIPC=true
 SystemCallArchitectures=native
+SystemCallFilter=~@reboot
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+
+# Prevent router-targeted firmware commands (e.g. OPTROUTER/NEWREBOOTDEVICE
+# or daily reboot timers) from ever invoking host reboot via systemd-logind/PID1.
+InaccessiblePaths=-/run/dbus
+InaccessiblePaths=-/run/systemd/private
+InaccessiblePaths=-/usr/bin/systemctl
 
 BindReadOnlyPaths=/opt/leigod/fake_product_name:/sys/class/dmi/id/product_name
 BindReadOnlyPaths=/opt/leigod/fake_os-release:/etc/os-release
