@@ -5,43 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- MANDATORY: Declare support for both light and dark themes -->
   <meta name="color-scheme" content="light dark">
-  <title>LEIGOD OS — 游戏加速控制台</title>
+  <title>LEIGOD — 游戏加速控制台</title>
   <style>
     :root {
-      --bg-light: #f1f5f9;
-      --bg-dark: #070a12;
-      --surface-light: rgba(255, 255, 255, 0.86);
-      --surface-dark: rgba(15, 23, 42, 0.72);
-      --surface-solid-light: #ffffff;
-      --surface-solid-dark: #0f172a;
-      --surface-alt-light: #e2e8f0;
-      --surface-alt-dark: rgba(30, 41, 59, 0.75);
-      --text-light: #0f172a;
-      --text-dark: #f8fafc;
-      --muted-light: #64748b;
-      --muted-dark: #94a3b8;
-      --border-light: rgba(15, 23, 42, 0.08);
-      --border-dark: rgba(255, 255, 255, 0.08);
-      --brand-light: #0284c7;
-      --brand-dark: #38bdf8;
-      --accent-light: #4f46e5;
-      --accent-dark: #818cf8;
-      --ok-light: #059669;
-      --ok-dark: #10b981;
-      --warn-light: #d97706;
-      --warn-dark: #f59e0b;
-      --err-light: #e11d48;
-      --err-dark: #f43f5e;
+      /* Official www.leigod.com (--ls-color-*) neutral carbon & functional tokens */
+      --bg-light: #f5f5f5;
+      --bg-dark: #141414;
+      --surface-light: #ffffff;
+      --surface-dark: #1f1f1f;
+      --surface-alt-light: #f0f0f0;
+      --surface-alt-dark: #262626;
+      --surface-hover-light: #e6e6e6;
+      --surface-hover-dark: #303030;
+      --text-light: #1a1a1a;
+      --text-dark: #e6e6e6;
+      --muted-light: #737373;
+      --muted-dark: #8c8c8c;
+      --border-light: rgba(0, 0, 0, 0.1);
+      --border-dark: rgba(255, 255, 255, 0.1);
+
+      /* Leigod primary CTA (--el-button-bg-color: var(--ls-color-gray-3)) */
+      --cta-bg-light: #1a1a1a;
+      --cta-bg-dark: #e6e6e6;
+      --cta-text-light: #ffffff;
+      --cta-text-dark: #141414;
+
+      /* Leigod functional status colors (--ls-color-Green / Orange / Red) */
+      --ok-light: #0bb07b;
+      --ok-dark: #1bb373;
+      --warn-light: #d96b10;
+      --warn-dark: #f37f19;
+      --err-light: #c92c2f;
+      --err-dark: #da3639;
 
       --bg: var(--bg-light);
       --surface: var(--surface-light);
-      --surface-solid: var(--surface-solid-light);
       --surface-alt: var(--surface-alt-light);
+      --surface-hover: var(--surface-hover-light);
       --text: var(--text-light);
       --muted: var(--muted-light);
       --border: var(--border-light);
-      --brand: var(--brand-light);
-      --accent: var(--accent-light);
+      --cta-bg: var(--cta-bg-light);
+      --cta-text: var(--cta-text-light);
       --ok: var(--ok-light);
       --warn: var(--warn-light);
       --err: var(--err-light);
@@ -50,13 +55,13 @@
       @media (prefers-color-scheme: dark) {
         --bg: var(--bg-dark);
         --surface: var(--surface-dark);
-        --surface-solid: var(--surface-solid-dark);
         --surface-alt: var(--surface-alt-dark);
+        --surface-hover: var(--surface-hover-dark);
         --text: var(--text-dark);
         --muted: var(--muted-dark);
         --border: var(--border-dark);
-        --brand: var(--brand-dark);
-        --accent: var(--accent-dark);
+        --cta-bg: var(--cta-bg-dark);
+        --cta-text: var(--cta-text-dark);
         --ok: var(--ok-dark);
         --warn: var(--warn-dark);
         --err: var(--err-dark);
@@ -65,13 +70,13 @@
       @supports (color: light-dark(white, black)) {
         --bg: light-dark(var(--bg-light), var(--bg-dark));
         --surface: light-dark(var(--surface-light), var(--surface-dark));
-        --surface-solid: light-dark(var(--surface-solid-light), var(--surface-solid-dark));
         --surface-alt: light-dark(var(--surface-alt-light), var(--surface-alt-dark));
+        --surface-hover: light-dark(var(--surface-hover-light), var(--surface-hover-dark));
         --text: light-dark(var(--text-light), var(--text-dark));
         --muted: light-dark(var(--muted-light), var(--muted-dark));
         --border: light-dark(var(--border-light), var(--border-dark));
-        --brand: light-dark(var(--brand-light), var(--brand-dark));
-        --accent: light-dark(var(--accent-light), var(--accent-dark));
+        --cta-bg: light-dark(var(--cta-bg-light), var(--cta-bg-dark));
+        --cta-text: light-dark(var(--cta-text-light), var(--cta-text-dark));
         --ok: light-dark(var(--ok-light), var(--ok-dark));
         --warn: light-dark(var(--warn-light), var(--warn-dark));
         --err: light-dark(var(--err-light), var(--err-dark));
@@ -79,7 +84,7 @@
 
       /* MANDATORY: Apply color-scheme to :root for viewport-wide theming */
       color-scheme: light dark;
-      accent-color: var(--brand);
+      accent-color: var(--ok);
     }
 
     @media (forced-colors: active) {
@@ -96,10 +101,6 @@
       margin: 0;
       font-family: "Inter", "PingFang SC", "Noto Sans CJK SC", system-ui, -apple-system, sans-serif;
       background-color: var(--bg);
-      background-image:
-        radial-gradient(900px circle at 12% -10%, color-mix(in oklab, var(--brand), transparent 86%), transparent 65%),
-        radial-gradient(800px circle at 88% 0%, color-mix(in oklab, var(--ok), transparent 89%), transparent 60%);
-      background-attachment: fixed;
       color: var(--text);
       line-height: 1.5;
       min-block-size: 100dvb;
@@ -111,10 +112,10 @@
       padding-block: 1.5rem 3rem;
       padding-inline: 1.5rem;
       display: grid;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
-    /* Top Navigation Bar */
+    /* Top Navigation Bar — Flat Matte Surface */
     .navbar {
       display: flex;
       flex-wrap: wrap;
@@ -124,11 +125,8 @@
       padding-block: 0.75rem;
       padding-inline: 1.15rem;
       background: var(--surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 30px rgba(0, 0, 0, 0.12);
+      border-radius: 12px;
     }
 
     .brand {
@@ -138,25 +136,25 @@
     }
 
     .brand-mark {
-      inline-size: 36px;
-      block-size: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--brand), var(--accent));
+      inline-size: 34px;
+      block-size: 34px;
+      border-radius: 8px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
       display: grid;
       place-content: center;
-      color: #fff;
-      box-shadow: 0 4px 14px color-mix(in oklab, var(--brand), transparent 55%);
+      color: var(--text);
     }
 
     .brand-text {
       display: flex;
       flex-direction: column;
-      line-height: 1.15;
+      line-height: 1.2;
     }
 
     .brand-name {
-      font-weight: 800;
-      font-size: 1rem;
+      font-weight: 700;
+      font-size: 0.95rem;
       letter-spacing: 0.02em;
     }
 
@@ -170,18 +168,18 @@
       display: flex;
       flex-wrap: wrap;
       align-items: safe center;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
 
-    /* Pills & Badges */
+    /* Pills & Badges — No Glow */
     .pill {
       display: inline-flex;
       align-items: safe center;
-      gap: 0.42rem;
-      padding-block: 0.28rem;
-      padding-inline: 0.72rem;
-      border-radius: 999px;
-      font-size: 0.76rem;
+      gap: 0.4rem;
+      padding-block: 0.24rem;
+      padding-inline: 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
       font-weight: 600;
       border: 1px solid var(--border);
       background: var(--surface-alt);
@@ -189,39 +187,35 @@
     }
 
     .pill-dot {
-      inline-size: 7px;
-      block-size: 7px;
+      inline-size: 6px;
+      block-size: 6px;
       border-radius: 50%;
       background: currentColor;
     }
 
     .pill.ok {
       color: var(--ok);
-      border-color: color-mix(in oklab, var(--ok), transparent 65%);
-      background: color-mix(in oklab, var(--ok), transparent 88%);
-    }
-
-    .pill.ok .pill-dot {
-      box-shadow: 0 0 8px var(--ok);
+      border-color: color-mix(in oklab, var(--ok), var(--border) 65%);
+      background: color-mix(in oklab, var(--ok), transparent 90%);
     }
 
     .pill.warn {
       color: var(--warn);
-      border-color: color-mix(in oklab, var(--warn), transparent 65%);
-      background: color-mix(in oklab, var(--warn), transparent 88%);
+      border-color: color-mix(in oklab, var(--warn), var(--border) 65%);
+      background: color-mix(in oklab, var(--warn), transparent 90%);
     }
 
     .pill.err {
       color: var(--err);
-      border-color: color-mix(in oklab, var(--err), transparent 65%);
-      background: color-mix(in oklab, var(--err), transparent 88%);
+      border-color: color-mix(in oklab, var(--err), var(--border) 65%);
+      background: color-mix(in oklab, var(--err), transparent 90%);
     }
 
     /* Hero Bento Grid */
     .bento-hero {
       display: grid;
       grid-template-columns: 1.15fr 1fr;
-      gap: 1.25rem;
+      gap: 1.15rem;
     }
 
     @media (max-width: 860px) {
@@ -230,72 +224,48 @@
       }
     }
 
-    .glass-card {
+    .matte-card {
       background: var(--surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 1.6rem;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 36px rgba(0, 0, 0, 0.14);
+      border-radius: 14px;
+      padding: 1.5rem;
       min-inline-size: 0;
     }
 
-    /* Left Hero: Power Orb & Primary Controls */
+    /* Left Hero: Matte Status Core & Controls */
     .hero-core {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1.5rem;
-      position: relative;
-      overflow: hidden;
+      gap: 1.4rem;
     }
 
     .orb-row {
       display: flex;
       align-items: safe center;
-      gap: 1.4rem;
+      gap: 1.15rem;
     }
 
     .orb-wrap {
-      position: relative;
-      inline-size: 92px;
-      block-size: 92px;
+      inline-size: 56px;
+      block-size: 56px;
+      border-radius: 12px;
       flex-shrink: 0;
       display: grid;
       place-content: center;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
     }
 
-    .orb-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px solid color-mix(in oklab, var(--ok), transparent 55%);
-      background: radial-gradient(circle, color-mix(in oklab, var(--ok), transparent 82%) 0%, transparent 72%);
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .orb-wrap.active .orb-ring {
-      border-color: var(--ok);
-      box-shadow: 0 0 28px color-mix(in oklab, var(--ok), transparent 60%), inset 0 0 18px color-mix(in oklab, var(--ok), transparent 72%);
-      animation: pulse-ring 2.6s infinite ease-in-out;
-    }
-
-    .orb-wrap.idle .orb-ring {
-      border-color: var(--border);
-      background: radial-gradient(circle, var(--surface-alt) 0%, transparent 72%);
-    }
-
-    @keyframes pulse-ring {
-      0%, 100% { transform: scale(1); opacity: 0.95; }
-      50% { transform: scale(1.04); opacity: 0.7; }
+    .orb-wrap.active {
+      border-color: color-mix(in oklab, var(--ok), var(--border) 50%);
+      background: color-mix(in oklab, var(--ok), var(--surface-alt) 88%);
     }
 
     .orb-icon {
-      inline-size: 38px;
-      block-size: 38px;
+      inline-size: 26px;
+      block-size: 26px;
       color: var(--ok);
-      z-index: 1;
     }
 
     .orb-wrap.idle .orb-icon {
@@ -305,42 +275,41 @@
     .hero-status-info {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.3rem;
       min-inline-size: 0;
     }
 
     .hero-eyebrow {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size: 0.74rem;
+      letter-spacing: 0.04em;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .hero-headline {
-      font-size: 1.65rem;
-      font-weight: 800;
-      letter-spacing: -0.025em;
+      font-size: 1.45rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
       margin: 0;
-      line-height: 1.2;
+      line-height: 1.25;
     }
 
     .hero-meta-pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.45rem;
-      margin-block-start: 0.25rem;
+      gap: 0.4rem;
+      margin-block-start: 0.2rem;
     }
 
     .mono-tag {
       font-family: ui-monospace, "JetBrains Mono", monospace;
-      font-size: 0.75rem;
-      padding-block: 0.18rem;
-      padding-inline: 0.55rem;
+      font-size: 0.74rem;
+      padding-block: 0.15rem;
+      padding-inline: 0.5rem;
       border-radius: 6px;
       background: var(--surface-alt);
       border: 1px solid var(--border);
-      color: var(--text);
+      color: var(--muted);
       font-variant-numeric: tabular-nums;
     }
 
@@ -348,11 +317,11 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0.75rem;
-      padding-block: 0.9rem;
+      padding-block: 0.85rem;
       padding-inline: 1rem;
-      background: color-mix(in oklab, var(--surface-alt), transparent 35%);
+      background: var(--surface-alt);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 10px;
     }
 
     .strip-item {
@@ -364,19 +333,19 @@
     .strip-label {
       font-size: 0.72rem;
       color: var(--muted);
-      font-weight: 600;
+      font-weight: 500;
     }
 
     .strip-val {
-      font-size: 1.08rem;
-      font-weight: 750;
+      font-size: 1.05rem;
+      font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
 
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.6rem;
+      gap: 0.55rem;
     }
 
     /* Right Hero Column: Telemetry Chart + Account Timer */
@@ -391,7 +360,7 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 0.75rem;
-      padding: 1.35rem 1.5rem;
+      padding: 1.25rem 1.4rem;
     }
 
     .telemetry-top {
@@ -403,7 +372,7 @@
 
     .speed-pair {
       display: flex;
-      gap: 1.25rem;
+      gap: 1.5rem;
       font-variant-numeric: tabular-nums;
     }
 
@@ -414,26 +383,22 @@
 
     .speed-dir {
       font-size: 0.72rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
 
     .speed-num {
-      font-size: 1.35rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+      font-size: 1.25rem;
+      font-weight: 750;
+      letter-spacing: -0.01em;
+      color: var(--text);
     }
-
-    .speed-num.down { color: var(--brand); }
-    .speed-num.up { color: var(--ok); }
 
     .sparkline-box {
       inline-size: 100%;
-      block-size: 64px;
-      border-radius: 10px;
-      background: color-mix(in oklab, var(--surface-alt), transparent 45%);
+      block-size: 58px;
+      border-radius: 8px;
+      background: var(--surface-alt);
       border: 1px solid var(--border);
       overflow: hidden;
       position: relative;
@@ -448,14 +413,14 @@
     .telemetry-foot {
       display: flex;
       justify-content: space-between;
-      font-size: 0.76rem;
+      font-size: 0.75rem;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
     }
 
     /* Account Time Card */
     .account-card {
-      padding: 1.25rem 1.5rem;
+      padding: 1.15rem 1.4rem;
       display: flex;
       flex-wrap: wrap;
       align-items: safe center;
@@ -470,13 +435,13 @@
     }
 
     .acct-time {
-      font-size: 1.25rem;
-      font-weight: 800;
+      font-size: 1.15rem;
+      font-weight: 750;
       font-variant-numeric: tabular-nums;
     }
 
     .acct-sub {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--muted);
     }
 
@@ -487,61 +452,57 @@
       align-items: safe center;
       justify-content: space-between;
       gap: 0.75rem;
-      margin-block-end: 0.9rem;
+      margin-block-end: 0.85rem;
     }
 
     .section-title {
-      font-size: 1.02rem;
-      font-weight: 750;
+      font-size: 0.96rem;
+      font-weight: 700;
       margin: 0;
-      display: flex;
-      align-items: safe center;
-      gap: 0.5rem;
+      color: var(--text);
     }
 
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 1rem;
+      gap: 0.95rem;
     }
 
     .game-card {
       background: var(--surface);
-      backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 1.2rem;
+      border-radius: 12px;
+      padding: 1.15rem;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1rem;
-      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+      gap: 0.95rem;
+      transition: border-color 0.15s ease;
     }
 
     .game-card:hover {
-      transform: translateY(-2px);
-      border-color: color-mix(in oklab, var(--brand), var(--border) 40%);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+      border-color: color-mix(in oklab, var(--text), var(--border) 70%);
     }
 
     .game-card-head {
       display: flex;
       align-items: safe center;
-      gap: 0.85rem;
+      gap: 0.8rem;
     }
 
     .game-avatar {
-      inline-size: 46px;
-      block-size: 46px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, color-mix(in oklab, var(--brand), #000 15%), var(--accent));
-      color: #fff;
-      font-weight: 800;
-      font-size: 0.88rem;
+      inline-size: 42px;
+      block-size: 42px;
+      border-radius: 8px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.82rem;
       display: grid;
       place-content: center;
       flex-shrink: 0;
-      letter-spacing: 0.03em;
+      font-family: ui-monospace, "JetBrains Mono", monospace;
     }
 
     .game-title-wrap {
@@ -550,8 +511,8 @@
     }
 
     .game-title {
-      font-weight: 700;
-      font-size: 0.96rem;
+      font-weight: 650;
+      font-size: 0.94rem;
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
@@ -559,7 +520,7 @@
     }
 
     .game-sub {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--muted);
       font-family: ui-monospace, "JetBrains Mono", monospace;
       margin-block-start: 0.15rem;
@@ -574,102 +535,101 @@
       border-block-start: 1px solid var(--border);
     }
 
-    /* Buttons */
+    /* Restrained Buttons per www.leigod.com (--el-button) */
     button, select, input {
       font: inherit;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       color: var(--text);
       background: var(--surface-alt);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding-block: 0.52rem;
-      padding-inline: 0.95rem;
-      transition: all 0.15s ease;
+      border-radius: 8px;
+      padding-block: 0.48rem;
+      padding-inline: 0.88rem;
+      transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
     }
 
     button {
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 550;
       display: inline-flex;
       align-items: safe center;
       justify-content: center;
-      gap: 0.42rem;
+      gap: 0.38rem;
     }
 
     button:hover:not(:disabled) {
-      border-color: color-mix(in oklab, var(--brand), var(--border) 40%);
-      background: color-mix(in oklab, var(--surface-alt), var(--brand) 10%);
+      background: var(--surface-hover);
+      border-color: color-mix(in oklab, var(--text), var(--border) 75%);
     }
 
     button:active:not(:disabled) {
-      transform: scale(0.98);
+      transform: translateY(1px);
     }
 
+    /* High-contrast monochrome primary CTA (--ls-color-gray-3 on --ls-color-gray-1) */
     button.btn-primary {
-      background: linear-gradient(135deg, var(--brand), color-mix(in oklab, var(--brand), var(--accent) 40%));
-      color: #ffffff;
+      background: var(--cta-bg);
+      color: var(--cta-text);
       border-color: transparent;
-      box-shadow: 0 4px 14px color-mix(in oklab, var(--brand), transparent 62%);
+      font-weight: 650;
     }
 
     button.btn-primary:hover:not(:disabled) {
-      filter: brightness(1.08);
+      background: color-mix(in oklab, var(--cta-bg), var(--surface) 14%);
+      border-color: transparent;
     }
 
-    button.btn-emerald {
-      background: color-mix(in oklab, var(--ok), transparent 85%);
-      color: var(--ok);
-      border-color: color-mix(in oklab, var(--ok), transparent 55%);
-    }
-
+    /* Restrained danger button: neutral at rest, muted red only on hover */
     button.btn-danger {
-      background: color-mix(in oklab, var(--err), transparent 88%);
+      color: var(--muted);
+    }
+
+    button.btn-danger:hover:not(:disabled) {
       color: var(--err);
-      border-color: color-mix(in oklab, var(--err), transparent 60%);
+      border-color: color-mix(in oklab, var(--err), var(--border) 55%);
+      background: color-mix(in oklab, var(--err), var(--surface-alt) 92%);
     }
 
     button.btn-sm {
-      padding-block: 0.36rem;
-      padding-inline: 0.68rem;
-      font-size: 0.78rem;
-      border-radius: 8px;
+      padding-block: 0.34rem;
+      padding-inline: 0.65rem;
+      font-size: 0.76rem;
+      border-radius: 6px;
     }
 
     /* Modal Dialog per modern-web-guidance light-dismiss-a-dialog */
     dialog {
       inline-size: min(680px, 92vw);
       max-block-size: 86vh;
-      background: var(--surface-solid);
+      background: var(--surface);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.5rem;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      border-radius: 14px;
+      padding: 1.4rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
     }
 
     dialog::backdrop {
-      background-color: rgba(3, 7, 18, 0.65);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      background-color: rgba(0, 0, 0, 0.65);
     }
 
     .dialog-head {
       display: flex;
       align-items: safe center;
       justify-content: space-between;
-      margin-block-end: 1.2rem;
-      padding-block-end: 0.8rem;
+      margin-block-end: 1.15rem;
+      padding-block-end: 0.75rem;
       border-block-end: 1px solid var(--border);
     }
 
     .dialog-head h2 {
       margin: 0;
-      font-size: 1.05rem;
+      font-size: 1rem;
     }
 
     .dialog-section {
-      margin-block-end: 1.25rem;
-      padding-block-end: 1.15rem;
+      margin-block-end: 1.15rem;
+      padding-block-end: 1.1rem;
       border-block-end: 1px solid var(--border);
     }
 
@@ -680,11 +640,9 @@
     }
 
     .dialog-section h3 {
-      font-size: 0.86rem;
+      font-size: 0.82rem;
       color: var(--muted);
-      margin: 0 0 0.75rem 0;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      margin: 0 0 0.7rem 0;
     }
 
     .form-grid {
@@ -698,7 +656,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--muted);
       min-inline-size: 0;
     }
@@ -706,21 +664,21 @@
     .inline-check {
       flex-direction: row;
       align-items: safe center;
-      gap: 0.45rem;
-      font-size: 0.82rem;
-      color: var(--text);
+      gap: 0.42rem;
+      font-size: 0.8rem;
+      color: var(--muted);
       cursor: pointer;
     }
 
     pre {
       margin: 0.65rem 0 0 0;
-      padding: 0.85rem;
+      padding: 0.8rem;
       background: var(--surface-alt);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       overflow-x: auto;
       font-family: ui-monospace, "JetBrains Mono", monospace;
-      font-size: 0.76rem;
+      font-size: 0.75rem;
       max-block-size: 200px;
     }
 
@@ -729,19 +687,18 @@
       inset-block-end: 1.5rem;
       inset-inline-end: 1.5rem;
       z-index: 99;
-      background: var(--surface-solid);
+      background: var(--surface);
       color: var(--text);
-      border: 1px solid var(--brand);
-      border-radius: 12px;
-      padding-block: 0.7rem;
-      padding-inline: 1.1rem;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-      font-size: 0.84rem;
-      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding-block: 0.6rem;
+      padding-inline: 1rem;
+      font-size: 0.82rem;
+      font-weight: 550;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
       pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
 
     .toast.show {
@@ -756,7 +713,7 @@
     <header class="navbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
         </div>
         <div class="brand-text">
           <span class="brand-name">LEIGOD STEAMOS</span>
@@ -771,21 +728,20 @@
       <div class="nav-actions">
         <label class="inline-check" style="margin-inline-end: 0.35rem;">
           <input type="checkbox" id="auto-poll" checked onchange="toggleAutoPoll()">
-          <span>实时遥测 (2s)</span>
+          <span>自动刷新 (2s)</span>
         </label>
         <button class="btn-sm" onclick="runDiagnostics()">网络自检</button>
-        <button class="btn-sm" onclick="document.getElementById('settings-dialog').showModal()">⚙ 账号与设置</button>
+        <button class="btn-sm" onclick="document.getElementById('settings-dialog').showModal()">账号与设置</button>
       </div>
     </header>
 
     <!-- Hero Bento Stage -->
     <section class="bento-hero" aria-label="核心加速控制台">
-      <!-- Left: Power Core -->
-      <article class="glass-card hero-core">
+      <!-- Left: Status Core -->
+      <article class="matte-card hero-core">
         <div class="orb-row">
           <div id="orb-wrap" class="orb-wrap active">
-            <div class="orb-ring"></div>
-            <svg class="orb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg>
+            <svg class="orb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg>
           </div>
           <div class="hero-status-info">
             <span class="hero-eyebrow" id="hero-eyebrow">TUN 透明路由引擎</span>
@@ -814,8 +770,8 @@
         </div>
 
         <div class="hero-actions">
-          <button class="btn-primary" onclick="pauseAccountTime()">⏸ 停止加速并暂停时长</button>
-          <button class="btn-emerald" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">▶ 恢复隧道</button>
+          <button class="btn-primary" onclick="pauseAccountTime()">停止加速并暂停时长</button>
+          <button onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复隧道</button>
           <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停隧道</button>
           <button class="btn-danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">断开隧道</button>
         </div>
@@ -823,16 +779,16 @@
 
       <!-- Right: Live Sparkline + Account Timer -->
       <div class="hero-side">
-        <article class="glass-card telemetry-card">
+        <article class="matte-card telemetry-card">
           <div class="telemetry-top">
             <div class="speed-pair">
               <div class="speed-block">
                 <span class="speed-dir">下行速率 (RX)</span>
-                <span class="speed-num down" id="speed-down">0 B/s</span>
+                <span class="speed-num" id="speed-down">0 B/s</span>
               </div>
               <div class="speed-block">
                 <span class="speed-dir">上行速率 (TX)</span>
-                <span class="speed-num up" id="speed-up">0 B/s</span>
+                <span class="speed-num" id="speed-up">0 B/s</span>
               </div>
             </div>
             <span class="mono-tag" id="traffic-iface-tag">tun_PC</span>
@@ -840,14 +796,8 @@
 
           <div class="sparkline-box" aria-hidden="true">
             <svg class="sparkline-svg" viewBox="0 0 300 64" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="rxGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.42"/>
-                  <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
-                </linearGradient>
-              </defs>
-              <path id="spark-area" d="M0,64 L300,64 Z" fill="url(#rxGrad)"></path>
-              <path id="spark-line" d="M0,62 L300,62" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round"></path>
+              <path id="spark-area" d="M0,64 L300,64 Z" fill="rgba(27, 179, 115, 0.10)"></path>
+              <path id="spark-line" d="M0,62 L300,62" fill="none" stroke="#1bb373" stroke-width="1.75" stroke-linecap="round"></path>
             </svg>
           </div>
 
@@ -857,7 +807,7 @@
           </div>
         </article>
 
-        <article class="glass-card account-card">
+        <article class="matte-card account-card">
           <div class="acct-info">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <span class="strip-label">雷神账号时长</span>
@@ -867,7 +817,7 @@
             <div class="acct-sub" id="acct-sub-text">已启用：关机 / 停止服务时自动暂停账号时长</div>
           </div>
           <div class="nav-actions">
-            <button class="btn-sm btn-emerald" onclick="recoverAccountTime()">恢复时长</button>
+            <button class="btn-sm" onclick="recoverAccountTime()">恢复时长</button>
             <button class="btn-sm" onclick="document.getElementById('settings-dialog').showModal()">配置 Token</button>
           </div>
         </article>
@@ -1104,11 +1054,11 @@
             const matchProf = savedProfiles.find(p => p.gameId === activeItem.gameId);
             const gName = matchProf ? matchProf.name.split(' · ')[0] : '游戏专线加速';
             accEl.textContent = `${gName} · ${area} 节点`;
-            eyeEl.textContent = '● TUN 透明加速运行中';
+            eyeEl.textContent = 'TUN 透明加速运行中';
           } else {
             orb.className = 'orb-wrap idle';
             accEl.textContent = '待机就绪 (未开启加速)';
-            eyeEl.textContent = '○ 点击下方游戏卡片或用手机开启加速';
+            eyeEl.textContent = '点击下方游戏卡片或用手机开启加速';
           }
         }
       } else if (cmd === 'GETNETWORKSTATE' || cmd === 'NETWORKSTATE') {
@@ -1124,7 +1074,7 @@
       document.getElementById('profiles-count').textContent = `${savedProfiles.length} 款存档`;
       const grid = document.getElementById('games-grid');
       if (!savedProfiles.length) {
-        grid.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
+        grid.innerHTML = `<div class="matte-card" style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
           暂无已捕获的游戏配置。在手机雷神 App 上开启任意游戏加速后，此处将自动生成快捷启动卡片。
         </div>`;
         return;
@@ -1145,7 +1095,7 @@
             <div class="nav-actions">
               <button class="btn-sm" onclick="renameSavedProfile(${idx})">重命名</button>
               <button class="btn-sm btn-danger" onclick="deleteSavedProfile(${idx})">删除</button>
-              <button class="btn-sm btn-primary" onclick="startSavedProfile(${idx})">▶ 立即加速</button>
+              <button class="btn-sm btn-primary" onclick="startSavedProfile(${idx})">启动加速</button>
             </div>
           </div>
         </article>`;
