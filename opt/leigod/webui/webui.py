@@ -6,10 +6,13 @@ import base64
 import configparser
 import json
 import os
+import signal
 import socket
 import struct
 import subprocess
+import sys
 import time
+import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -18,6 +21,8 @@ INDEX_HTML = BASE_DIR / "index.html"
 LEIGOD_DIR = Path("/opt/leigod")
 STATE_DIR = Path(os.environ.get("LEIGOD_STATE_DIR", "/var/lib/leigod"))
 PROFILES_FILE = STATE_DIR / "saved_profiles.json"
+ACCOUNT_FILE = STATE_DIR / "account.json"
+WEBAPI_BASE = "https://webapi.leigod.com"
 
 
 def ws_rpc_call(host: str, port: int, path: str, payload: dict, timeout: float = 4.0) -> dict:
@@ -100,6 +105,77 @@ def save_profiles(profiles: list) -> None:
         tmp.replace(PROFILES_FILE)
     except Exception:
         pass
+
+
+def load_account_config() -> dict:
+    if ACCOUNT_FILE.is_file():
+        try:
+            data = json.loads(ACCOUNT_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+    return {"account_token": "", "auto_pause_on_stop": True}
+
+
+def save_account_config(cfg: dict) -> None:
+    try:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = ACCOUNT_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.chmod(tmp, 0o600)
+        tmp.replace(ACCOUNT_FILE)
+    except Exception:
+        pass
+
+
+def webapi_post(endpoint: str, account_token: str) -> dict:
+    url = f"{WEBAPI_BASE}{endpoint}"
+    payload = {
+        "account_token": account_token,
+        "lang": "zh_CN",
+        "os_type": 4,
+        "region_code": 1,
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ),
+            "Origin": "https://www.leigod.com",
+            "Referer": "https://www.leigod.com/",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=6) as resp:
+        return json.loads(resp.read().decode("utf-8", errors="replace"))
+
+
+def pause_account_time(account_token: str, router_token: str = "") -> dict:
+    """Stop local TUN acceleration first (so heartbeat stops), then pause global account timer."""
+    if router_token:
+        try:
+            ws_rpc_call(
+                "127.0.0.1",
+                5588,
+                "/ws",
+                {
+                    "cmd": "STOPACC",
+                    "tag": "pause-stop",
+                    "sn": "",
+                    "cli": "webui",
+                    "code": 0,
+                    "err": "",
+                    "data": {"token": router_token, "catalogs": [1, 2, 3, 4, 5]},
+                },
+                timeout=2.0,
+            )
+        except Exception:
+            pass
+    return webapi_post("/api/user/pause", account_token)
 
 
 def scan_and_capture_active_profiles() -> list:
@@ -312,6 +388,7 @@ def read_host_status() -> dict:
             pass
 
     profiles = scan_and_capture_active_profiles()
+    acct_cfg = load_account_config()
 
     return {
         "service_active": service_active,
@@ -327,6 +404,8 @@ def read_host_status() -> dict:
         "token": token,
         "user_id": user_id,
         "profiles": profiles,
+        "has_account_token": bool(acct_cfg.get("account_token")),
+        "auto_pause_on_stop": bool(acct_cfg.get("auto_pause_on_stop", True)),
     }
 
 
@@ -361,6 +440,25 @@ class WebUIHandler(BaseHTTPRequestHandler):
             return
         if self.path == "/api/profiles":
             self._send_json(200, {"profiles": scan_and_capture_active_profiles()})
+            return
+        if self.path == "/api/account/status":
+            cfg = load_account_config()
+            acct_tok = cfg.get("account_token", "").strip()
+            if not acct_tok:
+                self._send_json(200, {"configured": False, "auto_pause_on_stop": cfg.get("auto_pause_on_stop", True)})
+                return
+            try:
+                res = webapi_post("/api/user/info", acct_tok)
+                self._send_json(
+                    200,
+                    {
+                        "configured": True,
+                        "auto_pause_on_stop": cfg.get("auto_pause_on_stop", True),
+                        "response": res,
+                    },
+                )
+            except Exception as exc:
+                self._send_json(502, {"configured": True, "error": str(exc)})
             return
         self._send_json(404, {"error": "Not found"})
 
@@ -460,6 +558,55 @@ class WebUIHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"ok": False, "msg": str(exc)})
             return
 
+        if self.path == "/api/account/save-token":
+            try:
+                body = self._read_json()
+                cfg = load_account_config()
+                if "account_token" in body and body["account_token"].strip():
+                    raw_tok = body["account_token"].strip()
+                    if raw_tok.startswith("{"):
+                        try:
+                            raw_tok = json.loads(raw_tok).get("account_token", raw_tok)
+                        except Exception:
+                            pass
+                    cfg["account_token"] = raw_tok
+                if "auto_pause_on_stop" in body:
+                    cfg["auto_pause_on_stop"] = bool(body["auto_pause_on_stop"])
+                save_account_config(cfg)
+                acct_tok = cfg.get("account_token", "")
+                info = webapi_post("/api/user/info", acct_tok) if acct_tok else {}
+                self._send_json(200, {"ok": True, "auto_pause_on_stop": cfg.get("auto_pause_on_stop", True), "response": info})
+            except Exception as exc:
+                self._send_json(400, {"ok": False, "msg": str(exc)})
+            return
+
+        if self.path == "/api/account/pause":
+            try:
+                cfg = load_account_config()
+                acct_tok = cfg.get("account_token", "").strip()
+                if not acct_tok:
+                    self._send_json(400, {"code": -1, "msg": "请先配置官网 account_token"})
+                    return
+                host_st = read_host_status()
+                res = pause_account_time(acct_tok, host_st.get("token", ""))
+                self._send_json(200, res)
+            except Exception as exc:
+                self._send_json(502, {"code": -1, "msg": str(exc)})
+            return
+
+        if self.path == "/api/account/recover":
+            try:
+                cfg = load_account_config()
+                acct_tok = cfg.get("account_token", "").strip()
+                if not acct_tok:
+                    self._send_json(400, {"code": -1, "msg": "请先配置官网 account_token"})
+                    return
+                res = webapi_post("/api/user/recover", acct_tok)
+                self._send_json(200, res)
+            except Exception as exc:
+                self._send_json(502, {"code": -1, "msg": str(exc)})
+            return
+
         self._send_json(404, {"error": "Not found"})
 
 
@@ -479,6 +626,20 @@ def main() -> None:
     args = parser.parse_args()
 
     server = HTTPServer((args.host, args.port), WebUIHandler)
+
+    def handle_sigterm(signum, frame):
+        cfg = load_account_config()
+        acct_tok = cfg.get("account_token", "").strip()
+        if acct_tok and cfg.get("auto_pause_on_stop", True):
+            try:
+                st = read_host_status()
+                pause_account_time(acct_tok, st.get("token", ""))
+            except Exception:
+                pass
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
+    signal.signal(signal.SIGINT, handle_sigterm)
     print(f"Leigod WebUI running at http://{args.host}:{args.port}")
     server.serve_forever()
 

@@ -358,6 +358,30 @@
     </section>
 
     <section class="card">
+      <h2>雷神账号时长管理（暂停时长 / 恢复时长 / 关机自动暂停）</h2>
+      <div class="form-row">
+        <label>
+          当前计费状态 & 剩余时长
+          <input id="acct-status-display" type="text" readonly value="未配置 account_token（请粘贴官网 account_token 并点击保存）">
+        </label>
+        <label>
+          官网 account_token（登录 leigod.com 按 F12 控制台输入 localStorage.getItem("account_token") 获取）
+          <input id="acct-token-input" type="password" placeholder="粘贴 account_token 或完整 JSON">
+        </label>
+      </div>
+      <div class="btn-row">
+        <button class="primary" onclick="pauseAccountTime()">停止加速并暂停时长</button>
+        <button onclick="recoverAccountTime()">恢复时长</button>
+        <button onclick="saveAccountToken()">保存 Token 并查询时长</button>
+        <button onclick="copyF12Snippet()">复制 F12 提取命令</button>
+        <label class="inline-check" style="margin-left: 0.4rem;">
+          <input type="checkbox" id="auto-pause-stop" checked onchange="saveAutoPauseSetting()">
+          <span>关机 / 停止 WebUI 服务时自动暂停时长</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>加速控制与宿主机维护 (`ws://127.0.0.1:5588/ws`)</h2>
       <div class="form-row">
         <label>
@@ -637,15 +661,91 @@
       </tr>`).join('');
     }
 
-    function startSavedProfile(idx) {
+    async function startSavedProfile(idx) {
       const p = savedProfiles[idx];
       if (!p) return;
-      sendCmd('STARTACC', {
+      try {
+        await fetch('/api/account/recover', { method: 'POST' });
+      } catch (_) {}
+      await sendCmd('STARTACC', {
         token: getToken(),
-        catalog: Number(p.catalog || 1),
-        subCatalog: Number(p.subCatalog || 1),
+        catalog: Number(p.catalog || 2),
+        subCatalog: Number(p.subCatalog || 0),
         conf: p.conf
       });
+      await loadAccountStatus();
+    }
+
+    async function loadAccountStatus() {
+      try {
+        const resp = await fetch('/api/account/status');
+        const data = await resp.json();
+        if (data.auto_pause_on_stop !== undefined) {
+          document.getElementById('auto-pause-stop').checked = Boolean(data.auto_pause_on_stop);
+        }
+        const disp = document.getElementById('acct-status-display');
+        if (!data.configured) {
+          disp.value = '未配置 account_token（支持粘贴 Token 后一键暂停/恢复时长）';
+          return;
+        }
+        const r = data.response || {};
+        if (r.code === 0 && r.data) {
+          const d = r.data;
+          const paused = Number(d.pause_status_id) === 1;
+          const sec = Number(d.expiry_time_samp || d.user_pause_time || 0);
+          const hours = Math.floor(sec / 3600);
+          const mins = Math.floor((sec % 3600) / 60);
+          const stateStr = paused ? '【已暂停 (不扣时长)】' : '【计时中 (计费消耗中)】';
+          const timeStr = sec > 0 ? `剩余 ${hours} 小时 ${mins} 分` : (d.expiry_time || '');
+          disp.value = `${stateStr} ${timeStr} (${d.nickname || d.mobile || '已认证'})`;
+        } else {
+          disp.value = `Token 状态异常: ${r.msg || data.error || '请重新获取 account_token'}`;
+        }
+      } catch (_) {}
+    }
+
+    async function saveAccountToken() {
+      const tok = document.getElementById('acct-token-input').value.trim();
+      const autoPause = document.getElementById('auto-pause-stop').checked;
+      const resp = await fetch('/api/account/save-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_token: tok, auto_pause_on_stop: autoPause })
+      });
+      const res = await resp.json();
+      appendLog('保存官网 account_token', res);
+      document.getElementById('acct-token-input').value = '';
+      await loadAccountStatus();
+    }
+
+    async function saveAutoPauseSetting() {
+      const autoPause = document.getElementById('auto-pause-stop').checked;
+      await fetch('/api/account/save-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auto_pause_on_stop: autoPause })
+      });
+    }
+
+    async function pauseAccountTime() {
+      const resp = await fetch('/api/account/pause', { method: 'POST' });
+      const res = await resp.json();
+      appendLog('停止加速并暂停账号时长 (/api/user/pause)', res);
+      await loadAccountStatus();
+      await refreshAll();
+    }
+
+    async function recoverAccountTime() {
+      const resp = await fetch('/api/account/recover', { method: 'POST' });
+      const res = await resp.json();
+      appendLog('恢复账号时长 (/api/user/recover)', res);
+      await loadAccountStatus();
+    }
+
+    function copyF12Snippet() {
+      const snippet = 'copy(JSON.parse(localStorage.getItem("account_token")).account_token)';
+      navigator.clipboard.writeText(snippet).catch(() => {});
+      appendLog('已复制 F12 提取命令（在 www.leigod.com 登录后按 F12 粘贴回车即可自动复制 account_token）', snippet);
     }
 
     async function deleteSavedProfile(idx) {
@@ -809,6 +909,7 @@
 
     async function refreshAll() {
       await loadHostStatus();
+      await loadAccountStatus();
       await sendCmd('GETROUTERINFO', {}, false);
       const token = getToken();
       if (token) {
