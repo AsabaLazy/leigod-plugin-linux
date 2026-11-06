@@ -522,12 +522,12 @@
       return document.getElementById('userid-input').value.trim();
     }
 
-    function formatBytes(bytes) {
+    function formatBytes(bytes, decimals = 2) {
       const n = Number(bytes) || 0;
-      if (n < 1024) return `${n} B`;
-      if (n < 1048576) return `${(n / 1024).toFixed(1)} KiB`;
-      if (n < 1073741824) return `${(n / 1048576).toFixed(2)} MiB`;
-      return `${(n / 1073741824).toFixed(2)} GiB`;
+      if (n < 1024) return `${Math.round(n)} B`;
+      if (n < 1048576) return `${(n / 1024).toFixed(decimals)} KiB`;
+      if (n < 1073741824) return `${(n / 1048576).toFixed(decimals)} MiB`;
+      return `${(n / 1073741824).toFixed(decimals)} GiB`;
     }
 
     function appendLog(title, obj) {
@@ -622,7 +622,7 @@
           const dt = (now - lastStatTime) / 1000;
           const rxRate = Math.max(0, (rx - lastRx) / dt);
           const txRate = Math.max(0, (tx - lastTx) / dt);
-          document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate)}/s | ↑ ${formatBytes(txRate)}/s`;
+          document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate, 0)}/s | ↑ ${formatBytes(txRate, 0)}/s`;
         }
         lastRx = rx;
         lastTx = tx;
@@ -846,7 +846,7 @@
             const dt = (now - lastStatTime) / 1000;
             const rxRate = Math.max(0, (rx - lastRx) / dt);
             const txRate = Math.max(0, (tx - lastTx) / dt);
-            document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate)}/s | ↑ ${formatBytes(txRate)}/s`;
+            document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate, 0)}/s | ↑ ${formatBytes(txRate, 0)}/s`;
           }
           lastRx = rx;
           lastTx = tx;
