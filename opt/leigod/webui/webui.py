@@ -21,7 +21,6 @@ INDEX_HTML = BASE_DIR / "index.html"
 LEIGOD_DIR = Path("/opt/leigod")
 STATE_DIR = Path(os.environ.get("LEIGOD_STATE_DIR", "/var/lib/leigod"))
 PROFILES_FILE = STATE_DIR / "saved_profiles.json"
-CUSTOM_GAMES_FILE = STATE_DIR / "custom_games.json"
 ACCOUNT_FILE = STATE_DIR / "account.json"
 WEBAPI_BASE = "https://webapi.leigod.com"
 
@@ -198,43 +197,20 @@ DOMAIN_HINTS = (
 
 
 def infer_game_title(game_id: str, parsed_conf: dict, dev_key: str = "PC") -> str:
-    """Resolve human-readable game title from user custom_games.json, KNOWN_GAMES, or rule domain hints."""
-    custom_map = load_custom_games()
-    if game_id in custom_map and custom_map[game_id]:
-        return str(custom_map[game_id])
+    """Resolve human-readable game title from KNOWN_GAMES or rule domain hints."""
     if game_id in KNOWN_GAMES:
         return KNOWN_GAMES[game_id]
     rules = parsed_conf.get("rules") if isinstance(parsed_conf, dict) else None
-    if isinstance(rules, list):
+    if isinstance(rules, list) and rules:
         for r in rules:
             hosts = r.get("host") if isinstance(r, dict) else None
             if isinstance(hosts, list):
                 joined = " ".join(str(h).lower() for h in hosts)
                 for kw, label in DOMAIN_HINTS:
                     if kw in joined:
-                        return f"{label} ({game_id[-4:]})"
-    return f"{dev_key} 专线配置 #{game_id[-4:]}"
-
-
-def load_custom_games() -> dict:
-    if CUSTOM_GAMES_FILE.is_file():
-        try:
-            data = json.loads(CUSTOM_GAMES_FILE.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data
-        except Exception:
-            pass
-    return {}
-
-
-def save_custom_games(mapping: dict) -> None:
-    try:
-        STATE_DIR.mkdir(parents=True, exist_ok=True)
-        tmp = CUSTOM_GAMES_FILE.with_suffix(".tmp")
-        tmp.write_text(json.dumps(mapping, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(CUSTOM_GAMES_FILE)
-    except Exception:
-        pass
+                        return label
+        return f"{dev_key} 专属规则加速"
+    return "通用游戏加速"
 
 
 def is_auto_placeholder_name(name: str) -> bool:
@@ -265,13 +241,12 @@ def scan_and_capture_active_profiles() -> list:
 
     changed = False
 
-    # Retroactively upgrade any existing placeholder names or apply custom UUID mapping in saved_profiles.json
-    custom_map = load_custom_games()
+    # Retroactively upgrade any existing placeholder names in saved_profiles.json
     for p in profiles:
         old_name = str(p.get("name") or "")
         gid = str(p.get("gameId") or "")
         area = str(p.get("area") or "hk").upper()
-        if gid and (gid in custom_map or is_auto_placeholder_name(old_name)):
+        if is_auto_placeholder_name(old_name) and gid:
             try:
                 conf_obj = json.loads(p["conf"]) if isinstance(p.get("conf"), str) else (p.get("conf") or {})
             except Exception:
@@ -652,31 +627,14 @@ class WebUIHandler(BaseHTTPRequestHandler):
             try:
                 body = self._read_json()
                 prof_id = body.get("id")
-                req_game_id = str(body.get("gameId") or "").strip()
                 new_name = str(body.get("name", "")).strip()
-                base_title = new_name.split(" · ")[0].strip()
                 profiles = load_saved_profiles()
-                if new_name and (prof_id or req_game_id):
-                    target_gid = req_game_id
-                    if not target_gid and prof_id:
-                        for p in profiles:
-                            if p.get("id") == prof_id:
-                                target_gid = str(p.get("gameId") or "").strip()
-                                break
-                    if target_gid and target_gid != "-":
-                        custom_map = load_custom_games()
-                        custom_map[target_gid] = base_title
-                        save_custom_games(custom_map)
-                        for p in profiles:
-                            if str(p.get("gameId") or "") == target_gid:
-                                area = str(p.get("area") or "hk").upper()
-                                p["name"] = f"{base_title} · {area}" if area and area != "-" else base_title
-                    elif prof_id:
-                        for p in profiles:
-                            if p.get("id") == prof_id:
-                                p["name"] = new_name
+                if prof_id and new_name:
+                    for p in profiles:
+                        if p.get("id") == prof_id:
+                            p["name"] = new_name
                     save_profiles(profiles)
-                self._send_json(200, {"ok": True, "profiles": profiles, "custom_games": load_custom_games()})
+                self._send_json(200, {"ok": True, "profiles": profiles})
             except Exception as exc:
                 self._send_json(400, {"ok": False, "msg": str(exc)})
             return

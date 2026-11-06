@@ -1082,10 +1082,10 @@
       grid.innerHTML = savedProfiles.map((p, idx) => {
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
         const title = escapeHtml(p.name || p.id);
-        const isGeneric = (p.name || '').includes('专线配置 #');
+        const isGeneric = (p.name || '').startsWith('通用游戏加速');
         const subHint = isGeneric
-          ? `手机端仅下发 ID (${escapeHtml(String(p.gameId || '-').slice(-6))}) · 点击重命名可备注游戏名`
-          : `游戏 ID: ${escapeHtml(String(p.gameId || '-').slice(0, 16))}...`;
+          ? `全局白名单加速 (${area} 节点) · 点击标题可自定义备注`
+          : `专属规则加速 · ID: ${escapeHtml(String(p.gameId || '-').slice(0, 12))}...`;
         return `<article class="game-card">
           <div class="game-card-head">
             <div class="game-avatar">${area}</div>
@@ -1109,17 +1109,16 @@
     async function renameSavedProfile(idx) {
       const p = savedProfiles[idx];
       if (!p) return;
-      const defaultTitle = String(p.name || '').split(' · ')[0];
-      const newName = prompt(`输入游戏名称（将自动绑定并永久记住 UUID: ${p.gameId}）：`, defaultTitle);
+      const newName = prompt('输入新的卡片名称：', p.name);
       if (!newName || !newName.trim()) return;
       const resp = await fetch('/api/profiles/rename', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: p.id, gameId: p.gameId, name: newName.trim() })
+        body: JSON.stringify({ id: p.id, name: newName.trim() })
       });
       const data = await resp.json();
       if (data.profiles) renderProfiles(data.profiles);
-      showToast(`已绑定 UUID (${String(p.gameId || '').slice(-6)}) -> ${newName.trim()}`);
+      showToast('已更新卡片名称');
     }
 
     async function startSavedProfile(idx) {
