@@ -235,19 +235,23 @@ def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str,
             limit_cfg["data_kb"] = 16384
             modified = True
 
-    if extra_rules:
-        cur_rules = parsed.get("rules")
-        if not isinstance(cur_rules, list):
-            cur_rules = []
-        existing_hosts = {tuple(sorted(r.get("host") or [])) for r in cur_rules if isinstance(r, dict)}
-        for r in extra_rules:
-            if isinstance(r, dict):
-                key = tuple(sorted(r.get("host") or []))
-                if key and key not in existing_hosts:
-                    cur_rules.append(r)
-                    existing_hosts.add(key)
-                    modified = True
-        parsed["rules"] = cur_rules
+    base_geo_rules = [
+        {"host": ["geo:cn"], "serv": ["direct"]},
+        {"host": ["geo:cn!"], "serv": ["default"]},
+    ]
+    all_to_merge = base_geo_rules + (extra_rules or [])
+    cur_rules = parsed.get("rules")
+    if not isinstance(cur_rules, list):
+        cur_rules = []
+    existing_hosts = {tuple(sorted(r.get("host") or [])) for r in cur_rules if isinstance(r, dict)}
+    for r in all_to_merge:
+        if isinstance(r, dict):
+            key = tuple(sorted(r.get("host") or []))
+            if key and key not in existing_hosts:
+                cur_rules.append(r)
+                existing_hosts.add(key)
+                modified = True
+    parsed["rules"] = cur_rules
 
     return json.dumps(parsed, ensure_ascii=False), parsed, modified
 
