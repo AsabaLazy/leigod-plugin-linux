@@ -178,43 +178,29 @@ def pause_account_time(account_token: str, router_token: str = "") -> dict:
     return webapi_post("/api/user/pause", account_token)
 
 
-KNOWN_GAMES = {
-    "2c92a19186fe5b3101872bf28884002a": "暗黑破坏神 IV (Diablo IV)",
+AREA_NAMES = {
+    "hk": "中国香港专线",
+    "jp": "日本东京专线",
+    "kr": "韩国首尔专线",
+    "tw": "中国台湾专线",
+    "us": "北美通用专线",
+    "eu": "欧洲通用专线",
+    "de": "德国法兰克福专线",
+    "sea": "东南亚新加坡专线",
+    "ru": "俄罗斯专线",
+    "au": "澳洲悉尼专线",
+    "global": "全球通用专线",
 }
 
-DOMAIN_HINTS = (
-    ("blizzard.com", "暴雪战网专线"),
-    ("battle.net", "暴雪战网专线"),
-    ("steam", "Steam 专线"),
-    ("ea.com", "EA 专线"),
-    ("ubisoft.com", "育碧 Ubi 专线"),
-    ("epicgames.com", "Epic 专线"),
-    ("rockstargames.com", "R星 专线"),
-    ("playstation", "PSN 主机专线"),
-    ("xboxlive.com", "Xbox 主机专线"),
-    ("nintendo", "Switch 主机专线"),
-)
+
+def format_region_title(area: str) -> str:
+    code = str(area or "hk").lower()
+    label = AREA_NAMES.get(code, f"{code.upper()} 游戏专线")
+    return f"{label} · {code.upper()}"
 
 
-def infer_game_title(game_id: str, parsed_conf: dict, dev_key: str = "PC") -> str:
-    """Resolve human-readable game title from KNOWN_GAMES or rule domain hints."""
-    if game_id in KNOWN_GAMES:
-        return KNOWN_GAMES[game_id]
-    rules = parsed_conf.get("rules") if isinstance(parsed_conf, dict) else None
-    if isinstance(rules, list) and rules:
-        for r in rules:
-            hosts = r.get("host") if isinstance(r, dict) else None
-            if isinstance(hosts, list):
-                joined = " ".join(str(h).lower() for h in hosts)
-                for kw, label in DOMAIN_HINTS:
-                    if kw in joined:
-                        return label
-        return f"{dev_key} 专属规则加速"
-    return "通用游戏加速"
-
-
-def sanitize_acc_conf(conf_input) -> tuple[str, dict, bool]:
-    """Disable all local telemetry/reporting in conf except tunnel heartbeat ('heart')."""
+def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str, dict, bool]:
+    """Disable all local telemetry/reporting in conf except tunnel heartbeat ('heart') and merge rules."""
     try:
         parsed = json.loads(conf_input) if isinstance(conf_input, str) else dict(conf_input)
     except Exception:
@@ -249,24 +235,76 @@ def sanitize_acc_conf(conf_input) -> tuple[str, dict, bool]:
             limit_cfg["data_kb"] = 16384
             modified = True
 
+    if extra_rules:
+        cur_rules = parsed.get("rules")
+        if not isinstance(cur_rules, list):
+            cur_rules = []
+        existing_hosts = {tuple(sorted(r.get("host") or [])) for r in cur_rules if isinstance(r, dict)}
+        for r in extra_rules:
+            if isinstance(r, dict):
+                key = tuple(sorted(r.get("host") or []))
+                if key and key not in existing_hosts:
+                    cur_rules.append(r)
+                    existing_hosts.add(key)
+                    modified = True
+        parsed["rules"] = cur_rules
+
     return json.dumps(parsed, ensure_ascii=False), parsed, modified
 
 
-def is_auto_placeholder_name(name: str) -> bool:
-    if not name:
-        return True
-    return (
-        name.startswith("PC 加速 (")
-        or name.startswith("PC 游戏 #")
-        or name.startswith("游戏 #")
-        or "专线配置 #" in name
-    )
+def consolidate_regional_profiles(profiles: list) -> tuple[list, bool]:
+    """Deduplicate profiles into 1 universal preset per region (area) and merge all special rules."""
+    merged_rules = []
+    seen_rule_keys = set()
+    for p in profiles:
+        try:
+            c = json.loads(p["conf"]) if isinstance(p.get("conf"), str) else (p.get("conf") or {})
+            for r in c.get("rules") or []:
+                if isinstance(r, dict):
+                    k = tuple(sorted(r.get("host") or []))
+                    if k and k not in seen_rule_keys:
+                        merged_rules.append(r)
+                        seen_rule_keys.add(k)
+        except Exception:
+            pass
+
+    by_area = {}
+    changed = False
+    for p in profiles:
+        area = str(p.get("area") or "hk").lower()
+        reg_id = f"region-{area}"
+        clean_str, conf_obj, was_mod = sanitize_acc_conf(p.get("conf") or "{}", merged_rules)
+        node_count = len((conf_obj.get("server") or {}).get("allNode") or [])
+        expected_name = format_region_title(area)
+        if area not in by_area:
+            new_entry = {
+                "id": reg_id,
+                "name": expected_name,
+                "catalog": int(p.get("catalog") or 2),
+                "subCatalog": int(p.get("subCatalog") or 0),
+                "gameId": str(p.get("gameId") or ""),
+                "area": area,
+                "nodeCount": node_count,
+                "conf": clean_str,
+                "updatedAt": p.get("updatedAt") or time.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            if (
+                p.get("id") != reg_id
+                or p.get("name") != expected_name
+                or was_mod
+                or p.get("nodeCount") != node_count
+            ):
+                changed = True
+            by_area[area] = new_entry
+        else:
+            changed = True
+
+    return list(by_area.values()), changed
 
 
 def scan_and_capture_active_profiles() -> list:
     """Scan /opt/leigod/config and daemon's PrivateTmp (/proc/<pid>/root/tmp/acc) for active *_acc_conf.json."""
     profiles = load_saved_profiles()
-    existing_keys = {p.get("id") for p in profiles}
     candidate_dirs = [LEIGOD_DIR / "config", Path("/tmp/acc")]
 
     try:
@@ -278,22 +316,8 @@ def scan_and_capture_active_profiles() -> list:
     except Exception:
         pass
 
-    changed = False
-
-    # Retroactively upgrade placeholder names and strip telemetry from saved_profiles.json
-    for p in profiles:
-        old_name = str(p.get("name") or "")
-        gid = str(p.get("gameId") or "")
-        area = str(p.get("area") or "hk").upper()
-        clean_str, conf_obj, conf_mod = sanitize_acc_conf(p.get("conf") or "{}")
-        if conf_mod:
-            p["conf"] = clean_str
-            changed = True
-        if is_auto_placeholder_name(old_name) and gid:
-            new_title = f"{infer_game_title(gid, conf_obj)} · {area}"
-            if new_title != old_name:
-                p["name"] = new_title
-                changed = True
+    profiles, changed = consolidate_regional_profiles(profiles)
+    existing_keys = {p.get("id") for p in profiles}
     core_meta = {}
     for d in candidate_dirs:
         core_file = d / "acc_core_conf.json"
@@ -314,30 +338,27 @@ def scan_and_capture_active_profiles() -> list:
                             core_mod = True
                         game_info = parsed.get("game") or {}
                         game_id = str(game_info.get("id") or dev_val.get("server") or dev_key)
-                        game_area = str(game_info.get("area") or dev_val.get("game_area") or "默认区服")
+                        game_area = str(game_info.get("area") or dev_val.get("game_area") or "hk").lower()
                         catalog = int(dev_val.get("device_type") or dev_val.get("catalog_type") or 2)
                         sub_catalog = int(dev_val.get("sub_type") or 0)
-                        prof_id = f"{catalog}-{sub_catalog}-{game_id}-{game_area}"
-                        title = infer_game_title(game_id, parsed, dev_key)
+                        prof_id = f"region-{game_area}"
+                        node_count = len((parsed.get("server") or {}).get("allNode") or [])
                         entry = {
                             "id": prof_id,
-                            "name": f"{title} · {game_area.upper()}",
+                            "name": format_region_title(game_area),
                             "catalog": catalog,
                             "subCatalog": sub_catalog,
                             "gameId": game_id,
                             "area": game_area,
-                            "conf": raw_text if isinstance(raw_text, str) else json.dumps(raw_text),
+                            "nodeCount": node_count,
+                            "conf": raw_text,
                             "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
                         }
                         if prof_id in existing_keys:
                             for idx, old in enumerate(profiles):
-                                if old.get("id") == prof_id:
-                                    old_name = old.get("name", "")
-                                    if old_name and not is_auto_placeholder_name(old_name):
-                                        entry["name"] = old_name
-                                    if old.get("conf") != entry["conf"] or old_name != entry["name"]:
-                                        profiles[idx] = entry
-                                        changed = True
+                                if old.get("id") == prof_id and old.get("conf") != entry["conf"]:
+                                    profiles[idx] = entry
+                                    changed = True
                         else:
                             profiles.insert(0, entry)
                             existing_keys.add(prof_id)
@@ -351,45 +372,8 @@ def scan_and_capture_active_profiles() -> list:
             except Exception:
                 pass
 
-    for d in candidate_dirs:
-        if not d.is_dir():
-            continue
-        try:
-            for f in d.iterdir():
-                if f.name.endswith("_acc_conf.json") or f.name == "acc_conf.json":
-                    raw_text = f.read_text(encoding="utf-8").strip()
-                    if not raw_text:
-                        continue
-                    parsed = json.loads(raw_text)
-                    game_id = str(parsed.get("game_id") or core_meta.get("game_id") or f.stem)
-                    game_area = str(parsed.get("game_area") or core_meta.get("game_area") or "默认区服")
-                    catalog = int(parsed.get("catalog_type") or core_meta.get("catalog_type") or 1)
-                    sub_catalog = int(parsed.get("sub_type") or core_meta.get("sub_type") or 1)
-                    prof_id = f"{catalog}-{sub_catalog}-{game_id}-{game_area}"
-                    entry = {
-                        "id": prof_id,
-                        "name": f"游戏 #{game_id} ({game_area})",
-                        "catalog": catalog,
-                        "subCatalog": sub_catalog,
-                        "gameId": game_id,
-                        "area": game_area,
-                        "conf": raw_text,
-                        "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
-                    }
-                    if prof_id in existing_keys:
-                        for idx, old in enumerate(profiles):
-                            if old.get("id") == prof_id and old.get("conf") != raw_text:
-                                entry["name"] = old.get("name", entry["name"])
-                                profiles[idx] = entry
-                                changed = True
-                    else:
-                        profiles.insert(0, entry)
-                        existing_keys.add(prof_id)
-                        changed = True
-        except Exception:
-            pass
-
     if changed:
+        profiles, _ = consolidate_regional_profiles(profiles)
         save_profiles(profiles)
     return profiles
 

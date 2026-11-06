@@ -824,11 +824,11 @@
       </div>
     </section>
 
-    <!-- Game Library Grid -->
+    <!-- Regional Universal Presets Grid -->
     <section aria-labelledby="games-heading">
       <div class="section-bar">
-        <h2 class="section-title" id="games-heading">快捷游戏加速库（手机开启过一次即永久存档，支持脱离手机直连启动）</h2>
-        <span class="pill" id="profiles-count">0 款存档</span>
+        <h2 class="section-title" id="games-heading">通用地区加速（支持全平台外服游戏，一键恢复时长并启动）</h2>
+        <span class="pill" id="profiles-count">0 个地区</span>
       </div>
       <div class="games-grid" id="games-grid"></div>
     </section>
@@ -1051,14 +1051,14 @@
           if (activeItem) {
             orb.className = 'orb-wrap active';
             const area = String(activeItem.area || 'HK').toUpperCase();
-            const matchProf = savedProfiles.find(p => p.gameId === activeItem.gameId);
-            const gName = matchProf ? matchProf.name.split(' · ')[0] : '游戏专线加速';
-            accEl.textContent = `${gName} · ${area} 节点`;
+            const matchProf = savedProfiles.find(p => String(p.area || '').toUpperCase() === area);
+            const gName = matchProf ? matchProf.name : `通用游戏专线 · ${area}`;
+            accEl.textContent = gName;
             eyeEl.textContent = 'TUN 透明加速运行中';
           } else {
             orb.className = 'orb-wrap idle';
             accEl.textContent = '待机就绪 (未开启加速)';
-            eyeEl.textContent = '点击下方游戏卡片或用手机开启加速';
+            eyeEl.textContent = '点击下方地区卡片即可开启通用游戏加速';
           }
         }
       } else if (cmd === 'GETNETWORKSTATE' || cmd === 'NETWORKSTATE') {
@@ -1071,34 +1071,29 @@
 
     function renderProfiles(profiles) {
       savedProfiles = profiles || [];
-      document.getElementById('profiles-count').textContent = `${savedProfiles.length} 款存档`;
+      document.getElementById('profiles-count').textContent = `${savedProfiles.length} 个地区`;
       const grid = document.getElementById('games-grid');
       if (!savedProfiles.length) {
         grid.innerHTML = `<div class="matte-card" style="grid-column: 1 / -1; text-align: center; color: var(--muted);">
-          暂无已捕获的游戏配置。在手机雷神 App 上开启任意游戏加速后，此处将自动生成快捷启动卡片。
+          暂无地区节点存档。在手机雷神 App 上任意开启一次加速后，将自动按地区生成通用加速卡片。
         </div>`;
         return;
       }
       grid.innerHTML = savedProfiles.map((p, idx) => {
         const area = escapeHtml(String(p.area || 'HK').toUpperCase());
         const title = escapeHtml(p.name || p.id);
-        const isGeneric = (p.name || '').startsWith('通用游戏加速');
-        const subHint = isGeneric
-          ? `全局白名单加速 (${area} 节点) · 点击标题可自定义备注`
-          : `专属规则加速 · ID: ${escapeHtml(String(p.gameId || '-').slice(0, 12))}...`;
+        const nodes = Number(p.nodeCount || 6);
         return `<article class="game-card">
           <div class="game-card-head">
             <div class="game-avatar">${area}</div>
             <div class="game-title-wrap">
-              <h3 class="game-title" title="点击修改名称：${title}" style="cursor: pointer;" onclick="renameSavedProfile(${idx})">${title}</h3>
-              <div class="game-sub">${subHint}</div>
+              <h3 class="game-title">${title}</h3>
+              <div class="game-sub">${nodes} 个专线节点 · 全平台白名单 + 战网加速</div>
             </div>
           </div>
           <div class="game-card-foot">
-            <span style="font-size: 0.74rem; color: var(--muted);">${escapeHtml(p.updatedAt || '-')}</span>
+            <span style="font-size: 0.74rem; color: var(--muted);">更新于 ${escapeHtml(p.updatedAt || '-')}</span>
             <div class="nav-actions">
-              <button class="btn-sm" onclick="renameSavedProfile(${idx})">重命名</button>
-              <button class="btn-sm btn-danger" onclick="deleteSavedProfile(${idx})">删除</button>
               <button class="btn-sm btn-primary" onclick="startSavedProfile(${idx})">启动加速</button>
             </div>
           </div>
