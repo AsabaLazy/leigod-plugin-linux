@@ -8,26 +8,26 @@
   <title>Leigod Plugin Linux — 控制面板</title>
   <style>
     :root {
-      --bg-light: #f6f8fa;
-      --bg-dark: #0d1117;
+      --bg-light: #f3f5f9;
+      --bg-dark: #0b0f17;
       --surface-light: #ffffff;
-      --surface-dark: #161b22;
-      --surface-alt-light: #f0f3f6;
-      --surface-alt-dark: #21262d;
-      --text-light: #1f2328;
-      --text-dark: #e6edf3;
-      --muted-light: #59636e;
-      --muted-dark: #8b949e;
-      --border-light: #d0d7de;
-      --border-dark: #30363d;
-      --brand-light: #0969da;
-      --brand-dark: #4493f8;
-      --ok-light: #1a7f37;
-      --ok-dark: #3fb950;
-      --warn-light: #9a6700;
-      --warn-dark: #d29922;
-      --err-light: #cf222e;
-      --err-dark: #f85149;
+      --surface-dark: #111827;
+      --surface-alt-light: #f8fafc;
+      --surface-alt-dark: #1e293b;
+      --text-light: #0f172a;
+      --text-dark: #f1f5f9;
+      --muted-light: #64748b;
+      --muted-dark: #94a3b8;
+      --border-light: #e2e8f0;
+      --border-dark: rgba(255, 255, 255, 0.08);
+      --brand-light: #2563eb;
+      --brand-dark: #3b82f6;
+      --ok-light: #16a34a;
+      --ok-dark: #22c55e;
+      --warn-light: #d97706;
+      --warn-dark: #f59e0b;
+      --err-light: #dc2626;
+      --err-dark: #ef4444;
 
       --bg: var(--bg-light);
       --surface: var(--surface-light);
@@ -39,6 +39,7 @@
       --ok: var(--ok-light);
       --warn: var(--warn-light);
       --err: var(--err-light);
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
 
       /* MANDATORY: Fallback for browsers without light-dark support */
       @media (prefers-color-scheme: dark) {
@@ -52,6 +53,7 @@
         --ok: var(--ok-dark);
         --warn: var(--warn-dark);
         --err: var(--err-dark);
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
       }
 
       @supports (color: light-dark(white, black)) {
@@ -72,169 +74,328 @@
       accent-color: var(--brand);
     }
 
+    @media (forced-colors: active) {
+      :root {
+        --border: CanvasText;
+      }
+    }
+
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
+      min-block-size: 100dvb;
+    }
+
+    .topbar {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 20;
+      background: color-mix(in oklab, var(--surface), transparent 18%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-block-end: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      max-inline-size: 1160px;
+      margin-inline: auto;
+      padding-block: 0.85rem;
+      padding-inline: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: safe center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .brand-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: safe center;
+      gap: 0.65rem;
+      margin: 0;
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-logo {
+      inline-size: 28px;
+      block-size: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--brand), color-mix(in oklab, var(--brand), #38bdf8 45%));
+      color: #ffffff;
+      display: inline-grid;
+      place-content: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 8px color-mix(in oklab, var(--brand), transparent 60%);
     }
 
     .container {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 1.25rem;
+      max-inline-size: 1160px;
+      margin-inline: auto;
+      padding-block: 1.35rem 2.5rem;
+      padding-inline: 1.25rem;
       display: grid;
-      gap: 1rem;
-    }
-
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-    }
-
-    header h1 {
-      font-size: 1.15rem;
-      margin: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.55rem;
+      gap: 1.15rem;
     }
 
     .badge {
       display: inline-flex;
-      align-items: center;
-      padding: 0.15rem 0.55rem;
+      align-items: safe center;
+      gap: 0.38rem;
+      padding-block: 0.2rem;
+      padding-inline: 0.65rem;
       border-radius: 999px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       border: 1px solid var(--border);
       background: var(--surface-alt);
+      color: var(--muted);
     }
-    .badge.ok { color: var(--ok); border-color: var(--ok); }
-    .badge.warn { color: var(--warn); border-color: var(--warn); }
-    .badge.err { color: var(--err); border-color: var(--err); }
 
+    .badge-dot {
+      inline-size: 7px;
+      block-size: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge.ok {
+      color: var(--ok);
+      border-color: color-mix(in oklab, var(--ok), transparent 65%);
+      background: color-mix(in oklab, var(--ok), transparent 90%);
+    }
+
+    .badge.ok .badge-dot {
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--ok), transparent 75%);
+    }
+
+    .badge.warn {
+      color: var(--warn);
+      border-color: color-mix(in oklab, var(--warn), transparent 65%);
+      background: color-mix(in oklab, var(--warn), transparent 90%);
+    }
+
+    .badge.err {
+      color: var(--err);
+      border-color: color-mix(in oklab, var(--err), transparent 65%);
+      background: color-mix(in oklab, var(--err), transparent 90%);
+    }
+
+    /* Subgrid KPI Cards per modern-web-guidance css-layout */
     .grid-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.85rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-rows: auto 1fr auto;
+      gap: 0.95rem;
+    }
+
+    .kpi-card {
+      grid-row: span 3;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      grid-template-rows: subgrid;
+      gap: 0.45rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding-block: 1.1rem;
+      padding-inline: 1.2rem;
+      box-shadow: var(--shadow);
+      min-inline-size: 0;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      padding-block: 1.15rem;
+      padding-inline: 1.3rem;
+      box-shadow: var(--shadow);
+      min-inline-size: 0;
     }
 
-    .card h2 {
-      font-size: 0.95rem;
-      margin: 0 0 0.75rem 0;
+    .section-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: safe center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-block-end: 0.9rem;
+    }
+
+    .card h2, .kpi-card h2 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0;
       color: var(--muted);
       font-weight: 600;
     }
 
-    .stat-value {
-      font-size: 1.2rem;
+    .card-title {
+      font-size: 0.98rem;
       font-weight: 700;
-      word-break: break-all;
+      margin: 0;
+      color: var(--text);
+      display: flex;
+      align-items: safe center;
+      gap: 0.5rem;
     }
 
-    .stat-sub {
-      font-size: 0.82rem;
+    .stat-value {
+      font-size: 1.38rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      word-break: break-word;
+      align-self: center;
+    }
+
+    .stat-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.22rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-top: 0.25rem;
+      font-variant-numeric: tabular-nums;
+      border-block-start: 1px solid var(--border);
+      padding-block-start: 0.55rem;
+    }
+
+    .mono {
+      font-family: ui-monospace, "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.79rem;
+      background: var(--surface-alt);
+      padding-block: 0.08rem;
+      padding-inline: 0.38rem;
+      border-radius: 5px;
+      border: 1px solid var(--border);
     }
 
     .btn-row {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
+      flex-wrap: balance;
+      align-items: safe center;
+      gap: 0.55rem;
     }
 
-    button, select, input, textarea {
+    button, select, input {
       font: inherit;
+      font-size: 0.86rem;
       color: var(--text);
       background: var(--surface-alt);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.42rem 0.78rem;
+      border-radius: 8px;
+      padding-block: 0.48rem;
+      padding-inline: 0.85rem;
+      transition: transform 0.1s ease, background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    input:focus-visible, select:focus-visible, button:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 1px;
     }
 
     button {
       cursor: pointer;
-      font-weight: 500;
-      transition: opacity 0.15s ease;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: safe center;
+      gap: 0.38rem;
     }
 
-    button:hover {
-      opacity: 0.88;
+    button:hover:not(:disabled) {
+      border-color: color-mix(in oklab, var(--brand), var(--border) 50%);
+      background: color-mix(in oklab, var(--surface-alt), var(--brand) 8%);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     button.primary {
       background: var(--brand);
       color: #ffffff;
       border-color: var(--brand);
+      box-shadow: 0 1px 4px color-mix(in oklab, var(--brand), transparent 65%);
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--brand), black 10%);
+    }
+
+    button.success {
+      background: color-mix(in oklab, var(--ok), transparent 88%);
+      color: var(--ok);
+      border-color: color-mix(in oklab, var(--ok), transparent 60%);
     }
 
     button.danger {
+      background: color-mix(in oklab, var(--err), transparent 90%);
       color: var(--err);
-      border-color: var(--err);
+      border-color: color-mix(in oklab, var(--err), transparent 65%);
     }
 
     .form-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.65rem;
-      margin-bottom: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.75rem;
+      margin-block-end: 0.85rem;
     }
 
     label {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
-      font-size: 0.82rem;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      font-weight: 500;
       color: var(--muted);
+      min-inline-size: 0;
     }
 
     .inline-check {
       flex-direction: row;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
+      align-items: safe center;
+      gap: 0.45rem;
+      font-size: 0.84rem;
       color: var(--text);
       cursor: pointer;
+      user-select: none;
     }
 
     /* Responsive Table per modern-web-guidance */
     .table-wrapper {
       overflow: auto;
       max-inline-size: 100%;
-      max-block-size: min(420px, 70vh);
+      max-block-size: min(400px, 68vh);
       container-type: inline-size;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
+      background: var(--surface);
     }
 
     table {
-      width: 100%;
+      inline-size: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
       --label-1: "名称";
       --label-2: "详情 / IP";
       --label-3: "标识 / MAC";
@@ -245,16 +406,34 @@
 
     caption {
       text-align: start;
-      padding: 0.65rem 0.9rem;
-      font-weight: 600;
+      padding-block: 0.75rem;
+      padding-inline: 1rem;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text);
       background: var(--surface-alt);
       border-block-end: 1px solid var(--border);
     }
 
     th, td {
-      padding: 0.6rem 0.85rem;
+      padding-block: 0.68rem;
+      padding-inline: 0.95rem;
       text-align: start;
       border-block-end: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child th,
+    tbody tr:last-child td {
+      border-block-end: none;
+    }
+
+    thead th {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 600;
     }
 
     thead {
@@ -300,125 +479,186 @@
       td:nth-child(6)::before { content: var(--label-6) ": "; font-weight: 600; color: var(--muted); }
     }
 
+    details.card summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.94rem;
+      list-style: none;
+      display: flex;
+      align-items: safe center;
+      justify-content: space-between;
+    }
+
+    details.card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.card[open] summary {
+      margin-block-end: 0.9rem;
+      padding-block-end: 0.75rem;
+      border-block-end: 1px solid var(--border);
+    }
+
     pre {
       margin: 0;
-      padding: 0.85rem;
+      padding: 0.9rem;
       background: var(--surface-alt);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       overflow-x: auto;
-      font-size: 0.82rem;
-      max-height: 280px;
+      font-family: ui-monospace, "JetBrains Mono", monospace;
+      font-size: 0.8rem;
+      max-block-size: 260px;
+    }
+
+    .toast {
+      position: fixed;
+      inset-block-end: 1.25rem;
+      inset-inline-end: 1.25rem;
+      z-index: 50;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--brand);
+      border-radius: 10px;
+      padding-block: 0.65rem;
+      padding-inline: 1rem;
+      box-shadow: var(--shadow);
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>
-        <span>Leigod Plugin Linux 控制面板</span>
-        <span id="ws-badge" class="badge warn">WebSocket: 连接中...</span>
-        <span id="svc-badge" class="badge">systemd: 检测中...</span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="brand-title">
+        <span class="brand-logo" aria-hidden="true">⚡</span>
+        <span>Leigod Plugin Linux</span>
+        <span id="svc-badge" class="badge"><span class="badge-dot" aria-hidden="true"></span><span id="svc-badge-text">systemd: 检测中</span></span>
+        <span id="ws-badge" class="badge ok"><span class="badge-dot" aria-hidden="true"></span><span id="ws-badge-text">RPC 代理就绪</span></span>
       </h1>
       <div class="btn-row">
         <label class="inline-check">
           <input type="checkbox" id="auto-poll" checked onchange="toggleAutoPoll()">
-          <span>每 2 秒自动刷新</span>
+          <span>2s 实时刷新</span>
         </label>
         <button class="primary" onclick="refreshAll()">立即刷新</button>
-        <button onclick="runDiagnostics()">一键网络诊断</button>
+        <button onclick="runDiagnostics()">网络诊断</button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <section class="grid-cards">
-      <div class="card">
-        <h2>设备身份 (SteamDeck 伪装)</h2>
-        <div class="stat-value" id="stat-model">SteamDeck / Jupiter</div>
-        <div class="stat-sub" id="stat-mac">虚拟 wlan0 MAC: -</div>
-        <div class="stat-sub" id="stat-sn">User ID: -</div>
-      </div>
-      <div class="card">
+  <main class="container">
+    <section class="grid-cards" aria-label="核心运行指标">
+      <article class="kpi-card">
         <h2>加速状态 & 隧道</h2>
-        <div class="stat-value" id="stat-acc">未获取</div>
-        <div class="stat-sub" id="stat-delay">延迟: - ms | 丢包: - %</div>
-        <div class="stat-sub" id="stat-tun">TUN 接口: -</div>
-      </div>
-      <div class="card">
+        <div class="stat-value" id="stat-acc">检测中...</div>
+        <div class="stat-meta">
+          <span id="stat-delay">节点延迟: - ms | 丢包: - %</span>
+          <span>隧道接口: <code class="mono" id="stat-tun">-</code></span>
+        </div>
+      </article>
+
+      <article class="kpi-card">
         <h2>实时速率 & 累计流量</h2>
         <div class="stat-value" id="stat-speed">↓ 0 B/s | ↑ 0 B/s</div>
-        <div class="stat-sub" id="stat-traffic">累计: RX 0 B / TX 0 B</div>
-        <div class="stat-sub" id="stat-netstate">外网连通性: -</div>
-      </div>
-      <div class="card">
-        <h2>核心版本 & 防火墙状态</h2>
+        <div class="stat-meta">
+          <span id="stat-traffic">累计: RX 0 B / TX 0 B</span>
+          <span id="stat-netstate">外网连通性: -</span>
+        </div>
+      </article>
+
+      <article class="kpi-card">
+        <h2>设备身份 (SteamDeck)</h2>
+        <div class="stat-value" id="stat-model">SteamDeck / Jupiter</div>
+        <div class="stat-meta">
+          <span>虚拟 MAC: <code class="mono" id="stat-mac">-</code></span>
+          <span>账号 ID: <code class="mono" id="stat-sn">-</code></span>
+        </div>
+      </article>
+
+      <article class="kpi-card">
+        <h2>引擎版本 & 防火墙</h2>
         <div class="stat-value" id="stat-ver">-</div>
-        <div class="stat-sub" id="stat-udp6066">UDP 6066 发现: -</div>
-        <div class="stat-sub" id="stat-fw">GAMEACC 规则链: -</div>
-      </div>
+        <div class="stat-meta">
+          <span id="stat-udp6066">UDP 6066 发现: -</span>
+          <span id="stat-fw">mangle 规则: -</span>
+        </div>
+      </article>
     </section>
 
-    <section class="card">
-      <h2>雷神账号时长管理（暂停时长 / 恢复时长 / 关机自动暂停）</h2>
+    <section class="card" aria-labelledby="acct-heading">
+      <div class="section-header">
+        <h3 class="card-title" id="acct-heading">⏱ 雷神账号时长管理（暂停时长 / 恢复时长 / 关机自动暂停）</h3>
+        <span id="acct-badge" class="badge">时长状态: 未配置</span>
+      </div>
       <div class="form-row">
         <label>
-          当前计费状态 & 剩余时长
+          当前计费状态 & 剩余可暂停时长
           <input id="acct-status-display" type="text" readonly value="未配置 account_token（请粘贴官网 account_token 并点击保存）">
         </label>
         <label>
-          官网 account_token（登录 leigod.com 按 F12 控制台输入 localStorage.getItem("account_token") 获取）
+          官网 account_token（登录 leigod.com 按 F12 粘贴提取命令即可获取）
           <input id="acct-token-input" type="password" placeholder="粘贴 account_token 或完整 JSON">
         </label>
       </div>
       <div class="btn-row">
-        <button class="primary" onclick="pauseAccountTime()">停止加速并暂停时长</button>
-        <button onclick="recoverAccountTime()">恢复时长</button>
-        <button onclick="saveAccountToken()">保存 Token 并查询时长</button>
-        <button onclick="copyF12Snippet()">复制 F12 提取命令</button>
-        <label class="inline-check" style="margin-left: 0.4rem;">
+        <button class="primary" onclick="pauseAccountTime()">⏸ 停止加速并暂停时长</button>
+        <button class="success" onclick="recoverAccountTime()">▶ 恢复账号时长</button>
+        <button onclick="saveAccountToken()">💾 保存 Token 并查询</button>
+        <button onclick="copyF12Snippet()">📋 复制 F12 提取命令</button>
+        <label class="inline-check" style="margin-inline-start: auto;">
           <input type="checkbox" id="auto-pause-stop" checked onchange="saveAutoPauseSetting()">
-          <span>关机 / 停止 WebUI 服务时自动暂停时长</span>
+          <span>关机 / 停止服务时自动暂停时长</span>
         </label>
       </div>
     </section>
 
-    <section class="card">
-      <h2>加速控制与宿主机维护 (`ws://127.0.0.1:5588/ws`)</h2>
+    <section class="card" aria-labelledby="ctrl-heading">
+      <div class="section-header">
+        <h3 class="card-title" id="ctrl-heading">🎛 隧道控制与宿主机维护</h3>
+      </div>
       <div class="form-row">
         <label>
-          WebSocket 地址
-          <input id="ws-url" type="text" value="">
-        </label>
-        <label>
-          设备 Token（已从 accelerator.ini 自动读取）
+          设备插件 Token（已从 accelerator.ini 自动加载）
           <input id="token-input" type="text" placeholder="绑定后自动生成">
         </label>
         <label>
-          User ID（已从 accelerator.ini 自动读取）
+          User ID（已从 accelerator.ini 自动加载）
           <input id="userid-input" type="text" placeholder="User ID">
         </label>
       </div>
       <div class="btn-row">
-        <button class="primary" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复加速 (RESUMEACC)</button>
-        <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停加速 (PAUSEACC)</button>
-        <button class="danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">停止加速 (STOPACC)</button>
+        <button class="primary" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复隧道 (RESUMEACC)</button>
+        <button onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停隧道 (PAUSEACC)</button>
+        <button class="danger" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">断开隧道 (STOPACC)</button>
         <button onclick="restartPluginService()">重启加速服务 (systemctl)</button>
-        <button onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复绑定 (AUTOREPAIRBOUND)</button>
-        <button class="danger" onclick="cleanupNetRules()">清理残留 iptables/ipset 规则</button>
+        <button onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复设备绑定</button>
+        <button class="danger" onclick="cleanupNetRules()">清理残留 iptables/ipset</button>
       </div>
     </section>
 
-    <section class="card">
-      <div tabindex="0" role="region" aria-labelledby="profiles-table-caption" class="table-wrapper">
+    <section class="card" style="padding: 0; overflow: hidden;">
+      <div tabindex="0" role="region" aria-labelledby="profiles-table-caption" class="table-wrapper" style="border: none; border-radius: 14px;">
         <table>
-          <caption id="profiles-table-caption">已捕获的游戏加速配置库（手机开启过一次即自动存档，后续可脱离手机直接启动 `STARTACC`）</caption>
+          <caption id="profiles-table-caption">🎮 已捕获的游戏加速配置库（手机开启过一次即自动存档，后续可脱离手机一键启动 `STARTACC`）</caption>
           <thead>
             <tr>
               <th scope="col">游戏 / 配置名称</th>
               <th scope="col">Game ID</th>
               <th scope="col">区服 (Area)</th>
-              <th scope="col">分类 (Catalog)</th>
-              <th scope="col">更新时间</th>
-              <th scope="col">操作</th>
+              <th scope="col">通道 (Catalog)</th>
+              <th scope="col">最近捕获时间</th>
+              <th scope="col">快捷操作</th>
             </tr>
           </thead>
           <tbody id="profiles-tbody">
@@ -435,23 +675,23 @@
       </div>
     </section>
 
-    <section class="card">
-      <div tabindex="0" role="region" aria-labelledby="devices-table-caption" class="table-wrapper">
+    <section class="card" style="padding: 0; overflow: hidden;">
+      <div tabindex="0" role="region" aria-labelledby="devices-table-caption" class="table-wrapper" style="border: none; border-radius: 14px;">
         <table>
-          <caption id="devices-table-caption">当前活跃加速设备列表 (`GETACCINFO` / `LISTGAMEDEVICES`)</caption>
+          <caption id="devices-table-caption">📡 当前活跃加速通道 (`GETDEVICELIST` / `GETACCINFO`)</caption>
           <thead>
             <tr>
-              <th scope="col">设备名称</th>
-              <th scope="col">IP 地址</th>
-              <th scope="col">MAC 地址</th>
-              <th scope="col">设备类型</th>
-              <th scope="col">加速状态</th>
-              <th scope="col">游戏 / 区服</th>
+              <th scope="col">通道类型</th>
+              <th scope="col">虚拟接口 / IP</th>
+              <th scope="col">设备 MAC</th>
+              <th scope="col">Catalog</th>
+              <th scope="col">隧道状态</th>
+              <th scope="col">当前加速游戏 / 区服</th>
             </tr>
           </thead>
           <tbody id="devices-tbody">
             <tr>
-              <th scope="row">暂无活跃设备</th>
+              <th scope="row">暂无活跃通道</th>
               <td>-</td>
               <td>-</td>
               <td>-</td>
@@ -463,30 +703,31 @@
       </div>
     </section>
 
-    <section class="card">
-      <h2>原生指令调试台 (支持全部 18 个 `HttpServerMgr` 命令)</h2>
+    <details class="card">
+      <summary>
+        <span>🛠 高级：原生指令 JSON 调试台 & 实时响应日志</span>
+        <span class="badge">点击展开 / 收起</span>
+      </summary>
       <div class="form-row">
         <label>
           选择命令 (`cmd`)
           <select id="debug-cmd" onchange="fillSamplePayload()">
             <option value="GETROUTERINFO">GETROUTERINFO (设备与绑定信息)</option>
             <option value="GETACCINFO">GETACCINFO (当前加速详情与延迟)</option>
-            <option value="LISTGAMEDEVICES">LISTGAMEDEVICES (扫描游戏设备)</option>
-            <option value="GETDEVICELIST">GETDEVICELIST (已发现设备列表)</option>
+            <option value="GETDEVICELIST">GETDEVICELIST (加速通道状态列表)</option>
+            <option value="LISTGAMEDEVICES">LISTGAMEDEVICES (局域网游戏设备)</option>
             <option value="GETNETWORKSTATE">GETNETWORKSTATE (网络状态检测)</option>
-            <option value="STATISTICS">STATISTICS (流量统计 RX/TX)</option>
+            <option value="STATISTICS">STATISTICS (插件流量统计)</option>
             <option value="NEWGETAPPVER">NEWGETAPPVER (查询插件版本)</option>
             <option value="DIAGNOSEACCENGINE">DIAGNOSEACCENGINE (诊断加速进程)</option>
             <option value="DIAGNOSENETWORK">DIAGNOSENETWORK (诊断网卡状态)</option>
-            <option value="DIAGNOSEINTERNET">DIAGNOSEINTERNET (Ping 百度诊断外网)</option>
+            <option value="DIAGNOSEINTERNET">DIAGNOSEINTERNET (Ping 诊断外网)</option>
             <option value="PONG">PONG (WebSocket 心跳测试)</option>
             <option value="PAUSEACC">PAUSEACC (暂停加速)</option>
             <option value="RESUMEACC">RESUMEACC (恢复加速)</option>
             <option value="STOPACC">STOPACC (停止加速)</option>
             <option value="STARTACC">STARTACC (启动加速)</option>
             <option value="AUTOREPAIRBOUND">AUTOREPAIRBOUND (自动修复绑定)</option>
-            <option value="NEWBINDROUTER">NEWBINDROUTER (绑定新设备)</option>
-            <option value="NEWUNBINDROUTER">NEWUNBINDROUTER (解绑设备)</option>
           </select>
         </label>
         <label>
@@ -494,25 +735,32 @@
           <input id="debug-data" type="text" value="{}">
         </label>
       </div>
-      <div class="btn-row" style="margin-bottom: 0.75rem;">
+      <div class="btn-row" style="margin-block-end: 0.75rem;">
         <button class="primary" onclick="sendDebugCmd()">发送指令</button>
         <button onclick="document.getElementById('log-output').textContent = ''">清空日志</button>
       </div>
       <pre id="log-output">等待指令响应...</pre>
-    </section>
-  </div>
+    </details>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    const defaultWsUrl = `ws://${location.hostname || '127.0.0.1'}:5588/ws`;
-    document.getElementById('ws-url').value = defaultWsUrl;
-
-    let ws = null;
     let tagCounter = 1;
     let pollTimer = null;
     let lastRx = null;
     let lastTx = null;
     let lastStatTime = null;
     let savedProfiles = [];
+    let toastTimer = null;
+
+    function showToast(text) {
+      const el = document.getElementById('toast');
+      el.textContent = text;
+      el.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    }
 
     function getToken() {
       return document.getElementById('token-input').value.trim();
@@ -544,12 +792,6 @@
       return data;
     }
 
-    function connectWs() {
-      const badge = document.getElementById('ws-badge');
-      badge.textContent = 'RPC: 安全代理模式 (127.0.0.1:5588)';
-      badge.className = 'badge ok';
-    }
-
     async function sendCmd(cmd, dataObj = {}, quiet = false) {
       const envelope = {
         cmd,
@@ -570,14 +812,20 @@
         const resJson = await resp.json();
         resJson.data = parseDataField(resJson.data);
         handleIncomingResponse(resJson, quiet);
+        if (!quiet) {
+          showToast(`${cmd} 执行完成 (code=${resJson.code})`);
+        }
       } catch (err) {
-        if (!quiet) appendLog(`调用 ${cmd} 失败`, String(err));
+        if (!quiet) {
+          appendLog(`调用 ${cmd} 失败`, String(err));
+          showToast(`调用 ${cmd} 失败`);
+        }
       }
     }
 
     function handleIncomingResponse(msg, quiet = false) {
       const cmd = (msg.cmd || '').toUpperCase();
-      if (!quiet && cmd !== 'STATISTICS' && cmd !== 'ACCINFO' && cmd !== 'ROUTERINFO') {
+      if (!quiet && cmd !== 'STATISTICS' && cmd !== 'ACCINFO' && cmd !== 'ROUTERINFO' && cmd !== 'DEVICELIST') {
         appendLog(`响应 ${msg.cmd} (code=${msg.code})`, msg);
       }
       const d = msg.data || {};
@@ -587,7 +835,7 @@
         if (info.model || info.brand) {
           document.getElementById('stat-model').textContent = `${info.brand || 'SteamDeck'} / ${info.model || 'Jupiter'}`;
         }
-        if (info.mac) document.getElementById('stat-mac').textContent = `虚拟 wlan0 MAC: ${info.mac}`;
+        if (info.mac) document.getElementById('stat-mac').textContent = info.mac;
         if (info.appver) document.getElementById('stat-ver').textContent = `v${info.appver}`;
         if (info.token && !info.token.startsWith('<') && !getToken()) {
           document.getElementById('token-input').value = info.token;
@@ -595,15 +843,7 @@
       } else if (cmd === 'GETACCINFO' || cmd === 'GETACC' || cmd === 'ACCINFO') {
         const acc = d.accInfo || d;
         if (acc.netDelay !== undefined) {
-          document.getElementById('stat-delay').textContent = `延迟: ${acc.netDelay} ms | 丢包: ${acc.lossRate ?? 0} %`;
-        }
-        const devList = acc.steamdeck_device_list || acc.router_device_list || acc.box_device_list;
-        if (Array.isArray(devList) && devList.length > 0) {
-          renderDevices(devList);
-          const active = devList.some(item => Number(item.accState) === 1 || item.accState === 'started' || item.state === 'started');
-          document.getElementById('stat-acc').textContent = active ? '加速运行中' : '已绑定 (待机)';
-        } else if (msg.code === 0) {
-          document.getElementById('stat-acc').textContent = '已绑定 (待机)';
+          document.getElementById('stat-delay').textContent = `节点延迟: ${acc.netDelay} ms | 丢包: ${acc.lossRate ?? 0} %`;
         }
       } else if (cmd === 'LISTGAMEDEVICES' || cmd === 'GETDEVICELIST' || cmd === 'DEVICELIST') {
         const list = (d.listGameDevices && d.listGameDevices.list) || d.list || (Array.isArray(d) ? d : []);
@@ -611,23 +851,10 @@
           const activeList = list.filter(item => item.gameId || Number(item.state) === 1 || Number(item.accState) === 1);
           renderDevices(activeList.length > 0 ? activeList : list);
           const active = list.some(item => Number(item.accState) === 1 || Number(item.state) === 1 || item.accState === 'started');
-          document.getElementById('stat-acc').textContent = active ? '加速运行中 (TUN 已接管)' : '已绑定 (待机)';
+          const accEl = document.getElementById('stat-acc');
+          accEl.textContent = active ? '● 加速运行中' : '○ 已绑定 (待机)';
+          accEl.style.color = active ? 'var(--ok)' : 'var(--text)';
         }
-      } else if (cmd === 'STATISTICS') {
-        const st = d.statistics || d;
-        const rx = Number(st.rx) || 0;
-        const tx = Number(st.tx) || 0;
-        const now = Date.now();
-        if (lastRx !== null && lastStatTime !== null && now > lastStatTime) {
-          const dt = (now - lastStatTime) / 1000;
-          const rxRate = Math.max(0, (rx - lastRx) / dt);
-          const txRate = Math.max(0, (tx - lastTx) / dt);
-          document.getElementById('stat-speed').textContent = `↓ ${formatBytes(rxRate, 0)}/s | ↑ ${formatBytes(txRate, 0)}/s`;
-        }
-        lastRx = rx;
-        lastTx = tx;
-        lastStatTime = now;
-        document.getElementById('stat-traffic').textContent = `累计: RX ${formatBytes(rx)} / TX ${formatBytes(tx)}`;
       } else if (cmd === 'GETNETWORKSTATE' || cmd === 'NETWORKSTATE') {
         const ns = d.networkState || d;
         if (ns.state !== undefined) {
@@ -648,13 +875,13 @@
       }
       tbody.innerHTML = savedProfiles.map((p, idx) => `<tr>
         <th scope="row">${escapeHtml(p.name || p.id)}</th>
-        <td>${escapeHtml(String(p.gameId || '-'))}</td>
-        <td>${escapeHtml(String(p.area || '-'))}</td>
-        <td>${escapeHtml(`${p.catalog || 1} / ${p.subCatalog || 1}`)}</td>
+        <td><code class="mono">${escapeHtml(String(p.gameId || '-'))}</code></td>
+        <td><span class="badge ok">${escapeHtml(String(p.area || '-').toUpperCase())}</span></td>
+        <td>Catalog ${escapeHtml(`${p.catalog || 2}`)}</td>
         <td>${escapeHtml(p.updatedAt || '-')}</td>
         <td>
           <div class="btn-row">
-            <button class="primary" onclick="startSavedProfile(${idx})">直接启动加速</button>
+            <button class="primary" onclick="startSavedProfile(${idx})">▶ 直接启动加速</button>
             <button class="danger" onclick="deleteSavedProfile(${idx})">删除</button>
           </div>
         </td>
@@ -664,6 +891,7 @@
     async function startSavedProfile(idx) {
       const p = savedProfiles[idx];
       if (!p) return;
+      showToast(`正在恢复时长并启动 ${p.name}...`);
       try {
         await fetch('/api/account/recover', { method: 'POST' });
       } catch (_) {}
@@ -684,8 +912,11 @@
           document.getElementById('auto-pause-stop').checked = Boolean(data.auto_pause_on_stop);
         }
         const disp = document.getElementById('acct-status-display');
+        const badge = document.getElementById('acct-badge');
         if (!data.configured) {
           disp.value = '未配置 account_token（支持粘贴 Token 后一键暂停/恢复时长）';
+          badge.textContent = '时长状态: 未配置';
+          badge.className = 'badge warn';
           return;
         }
         const r = data.response || {};
@@ -695,11 +926,15 @@
           const sec = Number(d.expiry_time_samp || d.user_pause_time || 0);
           const hours = Math.floor(sec / 3600);
           const mins = Math.floor((sec % 3600) / 60);
-          const stateStr = paused ? '【已暂停 (不扣时长)】' : '【计时中 (计费消耗中)】';
+          const stateStr = paused ? '已暂停 (不扣时长)' : '计时中 (计费消耗中)';
           const timeStr = sec > 0 ? `剩余 ${hours} 小时 ${mins} 分` : (d.expiry_time || '');
-          disp.value = `${stateStr} ${timeStr} (${d.nickname || d.mobile || '已认证'})`;
+          disp.value = `${stateStr} — ${timeStr} (${d.nickname || d.mobile || '已认证'})`;
+          badge.textContent = paused ? '⏸ 已暂停计费' : '▶ 计时消耗中';
+          badge.className = paused ? 'badge ok' : 'badge warn';
         } else {
           disp.value = `Token 状态异常: ${r.msg || data.error || '请重新获取 account_token'}`;
+          badge.textContent = 'Token 已过期';
+          badge.className = 'badge err';
         }
       } catch (_) {}
     }
@@ -715,6 +950,7 @@
       const res = await resp.json();
       appendLog('保存官网 account_token', res);
       document.getElementById('acct-token-input').value = '';
+      showToast('已保存官网 Token 并更新时长状态');
       await loadAccountStatus();
     }
 
@@ -725,12 +961,15 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auto_pause_on_stop: autoPause })
       });
+      showToast(autoPause ? '已开启关机自动暂停时长' : '已关闭关机自动暂停时长');
     }
 
     async function pauseAccountTime() {
+      showToast('正在停止加速并暂停账号时长...');
       const resp = await fetch('/api/account/pause', { method: 'POST' });
       const res = await resp.json();
       appendLog('停止加速并暂停账号时长 (/api/user/pause)', res);
+      showToast(res.code === 0 ? '已成功暂停雷神账号时长' : `暂停返回: ${res.msg || '请检查 Token'}`);
       await loadAccountStatus();
       await refreshAll();
     }
@@ -739,13 +978,15 @@
       const resp = await fetch('/api/account/recover', { method: 'POST' });
       const res = await resp.json();
       appendLog('恢复账号时长 (/api/user/recover)', res);
+      showToast(res.code === 0 ? '已恢复雷神账号时长' : `恢复返回: ${res.msg || '请检查 Token'}`);
       await loadAccountStatus();
     }
 
     function copyF12Snippet() {
       const snippet = 'copy(JSON.parse(localStorage.getItem("account_token")).account_token)';
       navigator.clipboard.writeText(snippet).catch(() => {});
-      appendLog('已复制 F12 提取命令（在 www.leigod.com 登录后按 F12 粘贴回车即可自动复制 account_token）', snippet);
+      appendLog('已复制 F12 提取命令', snippet);
+      showToast('已复制 F12 提取命令到剪贴板');
     }
 
     async function deleteSavedProfile(idx) {
@@ -758,40 +999,46 @@
       });
       const data = await resp.json();
       if (data.profiles) renderProfiles(data.profiles);
+      showToast('已删除存档配置');
     }
 
     async function cleanupNetRules() {
       const resp = await fetch('/api/cleanup-net', { method: 'POST' });
       const data = await resp.json();
       appendLog('清理残留网络规则', data);
+      showToast('已清理残留网络规则');
       await loadHostStatus();
     }
 
     async function restartPluginService() {
+      showToast('正在安全重启 leigod_plugin.service...');
       const resp = await fetch('/api/service-restart', { method: 'POST' });
       const data = await resp.json();
       appendLog('重启加速服务', data);
+      showToast('加速守护服务已重启');
       setTimeout(refreshAll, 1500);
     }
 
     function renderDevices(list) {
       const tbody = document.getElementById('devices-tbody');
       if (!list || list.length === 0) {
-        tbody.innerHTML = `<tr><th scope="row">暂无活跃设备</th><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
+        tbody.innerHTML = `<tr><th scope="row">暂无活跃通道</th><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>`;
         return;
       }
       const catalogNames = { 1: '主机 (Console)', 2: 'PC / SteamDeck', 3: '掌机 (Handheld)', 4: '手机 (Mobile)', 5: 'VR' };
       tbody.innerHTML = list.map(dev => {
         const isAcc = (dev.accState === 1 || dev.state === 1 || dev.accState === 'started' || dev.state === 'started');
-        const stateText = isAcc ? '加速中 (Active)' : '未加速';
+        const stateBadge = isAcc
+          ? '<span class="badge ok"><span class="badge-dot"></span>加速中 (Active)</span>'
+          : '<span class="badge">待机</span>';
         const catName = catalogNames[dev.catalog] || dev.name || dev.device_type || 'SteamDeck';
         return `<tr>
           <th scope="row">${escapeHtml(String(catName))}</th>
-          <td>${escapeHtml(dev.ip || dev.device_ip || '本机 (tun_PC)')}</td>
-          <td>${escapeHtml(dev.mac || dev.device_mac || document.getElementById('stat-mac').textContent.replace('虚拟 wlan0 MAC: ', ''))}</td>
+          <td><code class="mono">${escapeHtml(dev.ip || dev.device_ip || 'tun_PC (10.20.0.1)')}</code></td>
+          <td><code class="mono">${escapeHtml(dev.mac || dev.device_mac || document.getElementById('stat-mac').textContent)}</code></td>
           <td>Catalog ${escapeHtml(String(dev.catalog ?? dev.deviceCategory ?? 2))}</td>
-          <td>${escapeHtml(stateText)}</td>
-          <td>GameID: ${escapeHtml(String(dev.gameId || dev.game_id || '-'))} / 区服: ${escapeHtml(String(dev.area || dev.game_area || '-').toUpperCase())}</td>
+          <td>${stateBadge}</td>
+          <td>GameID: <code class="mono">${escapeHtml(String(dev.gameId || dev.game_id || '-'))}</code> / 区服: <strong>${escapeHtml(String(dev.area || dev.game_area || '-').toUpperCase())}</strong></td>
         </tr>`;
       }).join('');
     }
@@ -807,25 +1054,26 @@
         const resp = await fetch('/api/host-status');
         const info = await resp.json();
         const svcBadge = document.getElementById('svc-badge');
+        const svcText = document.getElementById('svc-badge-text');
         if (info.service_active) {
-          svcBadge.textContent = 'systemd: 运行中';
+          svcText.textContent = 'systemd: 运行中';
           svcBadge.className = 'badge ok';
         } else {
-          svcBadge.textContent = `systemd: ${info.service_state || '未运行'}`;
+          svcText.textContent = `systemd: ${info.service_state || '未运行'}`;
           svcBadge.className = 'badge err';
         }
         if (info.mac) {
-          document.getElementById('stat-mac').textContent = `虚拟 wlan0 MAC: ${info.mac}`;
+          document.getElementById('stat-mac').textContent = info.mac;
         }
         if (info.tun_interface) {
-          document.getElementById('stat-tun').textContent = `TUN 接口: ${info.tun_interface}`;
+          document.getElementById('stat-tun').textContent = info.tun_interface;
         }
         if (info.udp_6066) {
           document.getElementById('stat-udp6066').textContent = `UDP 6066 发现: ${info.udp_6066}`;
         }
         document.getElementById('stat-fw').textContent = info.has_gameacc_chain
-          ? 'GAMEACC 规则链: 已挂载 (加速中)'
-          : 'GAMEACC 规则链: 无残留';
+          ? 'mangle 规则: 0x102 已挂载 (加速中)'
+          : 'mangle 规则: 无残留';
         if (info.version) {
           document.getElementById('stat-ver').textContent = `v${info.version}`;
         }
@@ -833,7 +1081,7 @@
           document.getElementById('token-input').value = info.token;
         }
         if (info.user_id) {
-          document.getElementById('stat-sn').textContent = `User ID: ${info.user_id}`;
+          document.getElementById('stat-sn').textContent = info.user_id;
           if (!getUserId()) {
             document.getElementById('userid-input').value = info.user_id;
           }
@@ -875,13 +1123,11 @@
         GETNETWORKSTATE: { token },
         STATISTICS: { token },
         NEWGETAPPVER: { token },
-        PAUSEACC: { token, catalogs: [1] },
-        RESUMEACC: { token, catalogs: [1] },
-        STOPACC: { token, catalogs: [1] },
-        STARTACC: { token, catalog: 1, subCatalog: 1, conf: '' },
-        AUTOREPAIRBOUND: { rToken: token, userId: getUserId() },
-        NEWBINDROUTER: { bindCode: '', captcha: '', rToken: token, userId: getUserId(), appId: 'nnMobile_d0k3duup', reqChannel: '2' },
-        NEWUNBINDROUTER: { rToken: token, userId: getUserId(), appId: 'nnMobile_d0k3duup', reqChannel: '2' }
+        PAUSEACC: { token, catalogs: [2] },
+        RESUMEACC: { token, catalogs: [2] },
+        STOPACC: { token, catalogs: [2] },
+        STARTACC: { token, catalog: 2, subCatalog: 0, conf: '' },
+        AUTOREPAIRBOUND: { rToken: token, userId: getUserId() }
       };
       document.getElementById('debug-data').value = JSON.stringify(samples[cmd] || {});
     }
@@ -893,6 +1139,7 @@
         dataObj = JSON.parse(document.getElementById('debug-data').value || '{}');
       } catch (e) {
         appendLog('JSON 格式错误', String(e));
+        showToast('JSON 格式错误');
         return;
       }
       sendCmd(cmd, dataObj, false);
@@ -910,19 +1157,19 @@
     async function refreshAll() {
       await loadHostStatus();
       await loadAccountStatus();
-      await sendCmd('GETROUTERINFO', {}, false);
+      await sendCmd('GETROUTERINFO', {}, true);
       const token = getToken();
       if (token) {
-        await sendCmd('GETACCINFO', { token }, false);
-        await sendCmd('GETDEVICELIST', { token }, false);
-        await sendCmd('GETNETWORKSTATE', { token }, false);
-        await sendCmd('NEWGETAPPVER', { token }, false);
+        await sendCmd('GETACCINFO', { token }, true);
+        await sendCmd('GETDEVICELIST', { token }, true);
+        await sendCmd('GETNETWORKSTATE', { token }, true);
+        await sendCmd('NEWGETAPPVER', { token }, true);
       }
     }
 
     async function runDiagnostics() {
+      showToast('正在执行网络与引擎诊断...');
       await sendCmd('DIAGNOSEACCENGINE', {}, false);
-      await sendCmd('DIAGNOSENETWORK', {}, false);
       await sendCmd('DIAGNOSEINTERNET', {}, false);
     }
 
@@ -937,7 +1184,6 @@
       }
     }
 
-    connectWs();
     refreshAll();
     toggleAutoPoll();
   </script>
