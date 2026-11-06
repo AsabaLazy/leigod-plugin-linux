@@ -178,6 +178,11 @@ def pause_account_time(account_token: str, router_token: str = "") -> dict:
     return webapi_post("/api/user/pause", account_token)
 
 
+KNOWN_GAMES = {
+    "2c92a19186fe5b3101872bf28884002a": "暗黑破坏神 IV (Diablo IV)",
+}
+
+
 def scan_and_capture_active_profiles() -> list:
     """Scan /opt/leigod/config and daemon's PrivateTmp (/proc/<pid>/root/tmp/acc) for active *_acc_conf.json."""
     profiles = load_saved_profiles()
@@ -215,9 +220,10 @@ def scan_and_capture_active_profiles() -> list:
                         catalog = int(dev_val.get("device_type") or dev_val.get("catalog_type") or 2)
                         sub_catalog = int(dev_val.get("sub_type") or 0)
                         prof_id = f"{catalog}-{sub_catalog}-{game_id}-{game_area}"
+                        title = KNOWN_GAMES.get(game_id, f"{dev_key} 游戏 #{game_id[:8]}")
                         entry = {
                             "id": prof_id,
-                            "name": f"{dev_key} 加速 ({game_area.upper()} | {game_id[:8]}...)",
+                            "name": f"{title} · {game_area.upper()}",
                             "catalog": catalog,
                             "subCatalog": sub_catalog,
                             "gameId": game_id,
@@ -227,10 +233,13 @@ def scan_and_capture_active_profiles() -> list:
                         }
                         if prof_id in existing_keys:
                             for idx, old in enumerate(profiles):
-                                if old.get("id") == prof_id and old.get("conf") != entry["conf"]:
-                                    entry["name"] = old.get("name", entry["name"])
-                                    profiles[idx] = entry
-                                    changed = True
+                                if old.get("id") == prof_id:
+                                    old_name = old.get("name", "")
+                                    if old_name and not old_name.startswith("PC 加速 ("):
+                                        entry["name"] = old_name
+                                    if old.get("conf") != entry["conf"] or old_name != entry["name"]:
+                                        profiles[idx] = entry
+                                        changed = True
                         else:
                             profiles.insert(0, entry)
                             existing_keys.add(prof_id)
@@ -553,6 +562,22 @@ class WebUIHandler(BaseHTTPRequestHandler):
                 prof_id = body.get("id")
                 profiles = [p for p in load_saved_profiles() if p.get("id") != prof_id]
                 save_profiles(profiles)
+                self._send_json(200, {"ok": True, "profiles": profiles})
+            except Exception as exc:
+                self._send_json(400, {"ok": False, "msg": str(exc)})
+            return
+
+        if self.path == "/api/profiles/rename":
+            try:
+                body = self._read_json()
+                prof_id = body.get("id")
+                new_name = str(body.get("name", "")).strip()
+                profiles = load_saved_profiles()
+                if prof_id and new_name:
+                    for p in profiles:
+                        if p.get("id") == prof_id:
+                            p["name"] = new_name
+                    save_profiles(profiles)
                 self._send_json(200, {"ok": True, "profiles": profiles})
             except Exception as exc:
                 self._send_json(400, {"ok": False, "msg": str(exc)})
