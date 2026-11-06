@@ -239,6 +239,16 @@ def sanitize_acc_conf(conf_input) -> tuple[str, dict, bool]:
             log_cfg["outFile"] = False
             modified = True
 
+    limit_cfg = parsed.get("limit")
+    if isinstance(limit_cfg, dict):
+        for k in ("play_kb", "down_kb", "up_kb"):
+            if int(limit_cfg.get(k) or 0) < 8192:
+                limit_cfg[k] = 8192
+                modified = True
+        if int(limit_cfg.get("data_kb") or 0) < 16384:
+            limit_cfg["data_kb"] = 16384
+            modified = True
+
     return json.dumps(parsed, ensure_ascii=False), parsed, modified
 
 
