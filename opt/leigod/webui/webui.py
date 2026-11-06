@@ -251,7 +251,10 @@ def consolidate_regional_profiles(profiles: list) -> tuple[list, bool]:
     by_area = {}
     changed = False
     for p in profiles:
-        area = str(p.get("area") or "hk").lower()
+        area = str(p.get("area") or "").lower().strip()
+        if not area or area == "-":
+            changed = True
+            continue
         reg_id = f"region-{area}"
         clean_str, conf_obj, was_mod = sanitize_acc_conf(p.get("conf") or "{}")
         node_count = len((conf_obj.get("server") or {}).get("allNode") or [])
@@ -570,29 +573,32 @@ class WebUIHandler(BaseHTTPRequestHandler):
                         },
                     )
                     return
-                # If user triggers STARTACC manually, sanitize telemetry and save to profiles library
-                if isinstance(req_obj, dict) and str(req_obj.get("cmd", "")).upper() in ("STARTACC", "START"):
+                # If user triggers STARTACC, sanitize telemetry and pass conf as a JSON object (dict)
+                if isinstance(req_obj, dict) and cmd_upper in ("STARTACC", "START"):
                     d = req_obj.get("data") or {}
                     if isinstance(d, dict) and d.get("conf"):
-                        clean_conf, _, _ = sanitize_acc_conf(d["conf"])
-                        d["conf"] = clean_conf
-                        profiles = load_saved_profiles()
-                        prof_id = f"{d.get('catalog', 1)}-{d.get('subCatalog', 1)}-manual"
-                        if not any(p.get("id") == prof_id for p in profiles):
-                            profiles.insert(
-                                0,
-                                {
-                                    "id": prof_id,
-                                    "name": d.get("name", f"自定义配置 ({prof_id})"),
-                                    "catalog": int(d.get("catalog", 1)),
-                                    "subCatalog": int(d.get("subCatalog", 1)),
-                                    "gameId": "-",
-                                    "area": "-",
-                                    "conf": clean_conf,
-                                    "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
-                                },
-                            )
-                            save_profiles(profiles)
+                        clean_conf, parsed_conf, _ = sanitize_acc_conf(d["conf"])
+                        d["conf"] = parsed_conf if parsed_conf else clean_conf
+                        area = str((parsed_conf.get("game") or {}).get("area") or "").lower().strip()
+                        if area and area != "-":
+                            profiles = load_saved_profiles()
+                            prof_id = f"region-{area}"
+                            if not any(p.get("id") == prof_id for p in profiles):
+                                profiles.insert(
+                                    0,
+                                    {
+                                        "id": prof_id,
+                                        "name": format_region_title(area),
+                                        "catalog": int(d.get("catalog", 2)),
+                                        "subCatalog": int(d.get("subCatalog", 0)),
+                                        "gameId": str((parsed_conf.get("game") or {}).get("id") or ""),
+                                        "area": area,
+                                        "nodeCount": len((parsed_conf.get("server") or {}).get("allNode") or []),
+                                        "conf": clean_conf,
+                                        "updatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
+                                    },
+                                )
+                                save_profiles(profiles)
                 resp = ws_rpc_call("127.0.0.1", 5588, "/ws", req_obj)
                 self._send_json(200, resp)
             except Exception as exc:

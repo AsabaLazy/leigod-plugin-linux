@@ -1123,11 +1123,15 @@
       try {
         await fetch('/api/account/recover', { method: 'POST' });
       } catch (_) {}
+      let parsedConf = p.conf;
+      if (typeof parsedConf === 'string') {
+        try { parsedConf = JSON.parse(parsedConf); } catch (_) {}
+      }
       await sendCmd('STARTACC', {
         token: getToken(),
         catalog: Number(p.catalog || 2),
         subCatalog: Number(p.subCatalog || 0),
-        conf: p.conf
+        conf: parsedConf
       });
       await loadAccountStatus();
       await refreshAll();
