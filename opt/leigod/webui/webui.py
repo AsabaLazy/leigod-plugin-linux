@@ -623,33 +623,25 @@ def read_host_status() -> dict:
     active_tun = ""
     try:
         res = subprocess.run(["ip", "-o", "link", "show", "type", "tun"], capture_output=True, text=True, timeout=2)
-        lines = [line.split(":")[1].strip().split("@")[0] for line in res.stdout.splitlines() if ":" in line]
+        lines = [
+            line.split(":")[1].strip().split("@")[0]
+            for line in res.stdout.splitlines()
+            if ":" in line and line.split(":")[1].strip().startswith("tun_")
+        ]
         if lines:
             tun_if = ", ".join(lines)
             active_tun = lines[0]
     except Exception:
         pass
 
-    # Read real traffic counters (prefer active tun interface, fallback to default route interface)
-    traffic_iface = active_tun
-    if not traffic_iface:
-        try:
-            res = subprocess.run(["ip", "route", "show", "default"], capture_output=True, text=True, timeout=2)
-            for part in res.stdout.split():
-                if part == "dev":
-                    idx = res.stdout.split().index("dev")
-                    if idx + 1 < len(res.stdout.split()):
-                        traffic_iface = res.stdout.split()[idx + 1]
-                        break
-        except Exception:
-            pass
-
+    # Only read traffic counters from Leigod's active tun_* interface (never fallback to physical NIC)
+    traffic_iface = active_tun or "tun_PC"
     rx_bytes = 0
     tx_bytes = 0
-    if traffic_iface:
+    if active_tun:
         try:
-            rx_bytes = int(Path(f"/sys/class/net/{traffic_iface}/statistics/rx_bytes").read_text().strip())
-            tx_bytes = int(Path(f"/sys/class/net/{traffic_iface}/statistics/tx_bytes").read_text().strip())
+            rx_bytes = int(Path(f"/sys/class/net/{active_tun}/statistics/rx_bytes").read_text().strip())
+            tx_bytes = int(Path(f"/sys/class/net/{active_tun}/statistics/tx_bytes").read_text().strip())
         except Exception:
             pass
 
