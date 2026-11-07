@@ -712,7 +712,7 @@
           <span class="brand-sub" id="nav-sub">v1.3.0.02</span>
         </div>
         <span id="svc-badge" class="pill ok">
-          <span id="svc-badge-text">守护运行中</span>
+          <span id="svc-badge-text">服务运行中</span>
         </span>
       </div>
 
@@ -1270,7 +1270,7 @@
         const svcBadge = document.getElementById('svc-badge');
         const svcText = document.getElementById('svc-badge-text');
         if (info.service_active) {
-          svcText.textContent = '守护运行中';
+          svcText.textContent = '服务运行中';
           svcBadge.className = 'pill ok';
         } else {
           svcText.textContent = `服务异常 (${info.service_state || '停止'})`;
