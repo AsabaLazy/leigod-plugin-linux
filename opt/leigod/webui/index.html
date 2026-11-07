@@ -368,6 +368,17 @@
       font-weight: 700;
     }
 
+    .region-select > button.select-trigger,
+    .region-select selectedcontent {
+      all: unset;
+      display: flex;
+      align-items: safe center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      flex: 1;
+      min-inline-size: 0;
+    }
+
     .opt-nodes {
       font-family: ui-monospace, "JetBrains Mono", monospace;
       font-size: 0.73rem;
@@ -1036,7 +1047,7 @@
             const area = String(activeItem.area || activeAreaCode || 'HK').toUpperCase();
             activeAreaCode = area;
             const matchProf = savedProfiles.find(p => String(p.area || '').toUpperCase() === area);
-            const gName = matchProf ? matchProf.name.split('·')[0].trim() : `${area} 游戏专线`;
+            const gName = matchProf ? matchProf.name : area;
             accEl.textContent = `${gName} · 加速中`;
             eyeEl.textContent = 'TUN 透明加速运行中';
             mainBtn.textContent = '停止加速并暂停时长';
@@ -1098,14 +1109,13 @@
         return;
       }
 
-      sel.innerHTML = savedProfiles.map((p, idx) => {
-        const area = escapeHtml(String(p.area || 'HK').toUpperCase());
-        const cleanTitle = escapeHtml((p.name || p.id).split('·')[0].trim());
+      sel.innerHTML = (supportsBaseSelect ? `<button class="select-trigger"><selectedcontent></selectedcontent></button>` : '') + savedProfiles.map((p, idx) => {
+        const cleanTitle = escapeHtml(p.name || p.id);
         const nodes = Number(p.nodeCount || 6);
         if (supportsBaseSelect) {
-          return `<option value="${idx}"><span>${cleanTitle} · ${area}</span><span class="opt-nodes">${nodes} 节点</span></option>`;
+          return `<option value="${idx}"><span>${cleanTitle}</span><span class="opt-nodes"> ${nodes} 节点</span></option>`;
         }
-        return `<option value="${idx}">${cleanTitle} · ${area} (${nodes} 节点)</option>`;
+        return `<option value="${idx}">${cleanTitle} (${nodes} 节点)</option>`;
       }).join('');
 
       let targetIdx = 0;
@@ -1121,12 +1131,11 @@
 
       if (menu && !supportsBaseSelect) {
         menu.innerHTML = savedProfiles.map((p, idx) => {
-          const area = escapeHtml(String(p.area || 'HK').toUpperCase());
-          const cleanTitle = escapeHtml((p.name || p.id).split('·')[0].trim());
+          const cleanTitle = escapeHtml(p.name || p.id);
           const nodes = Number(p.nodeCount || 6);
           const isSel = idx === targetIdx;
           return `<button type="button" role="option" aria-selected="${isSel}" class="custom-opt${isSel ? ' selected' : ''}" onclick="selectCustomRegion(${idx})">
-            <span>${cleanTitle} · ${area}</span>
+            <span>${cleanTitle}</span>
             <span class="opt-nodes">${nodes} 节点</span>
           </button>`;
         }).join('');

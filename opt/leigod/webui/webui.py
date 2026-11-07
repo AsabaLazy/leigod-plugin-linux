@@ -182,17 +182,17 @@ def pause_account_time(account_token: str, router_token: str = "") -> dict:
 
 AREA_NAMES = {
     "auto": "全球智能分流",
-    "hk": "中国香港专线",
-    "jp": "日本东京专线",
-    "kr": "韩国首尔专线",
-    "tw": "中国台湾专线",
-    "sea": "东南亚新加坡专线",
-    "us": "北美通用专线",
-    "eu": "欧洲通用专线",
-    "de": "德国法兰克福专线",
-    "ru": "俄罗斯专线",
-    "au": "澳洲悉尼专线",
-    "global": "全球通用专线",
+    "hk": "中国香港",
+    "jp": "日本东京",
+    "kr": "韩国首尔",
+    "tw": "中国台湾台北",
+    "sea": "东南亚新加坡",
+    "us": "美国洛杉矶",
+    "eu": "德国法兰克福",
+    "de": "德国法兰克福",
+    "ru": "俄罗斯莫斯科",
+    "au": "澳大利亚悉尼",
+    "global": "全球智能分流",
 }
 
 PRESET_AREAS = ["auto", "hk", "jp", "kr", "tw", "sea", "us", "eu", "ru", "au"]
@@ -201,8 +201,7 @@ DEAD_GEO_ENDPOINTS = ("175.178.53.171:5438", "39.173.180.27:5438")
 
 def format_region_title(area: str) -> str:
     code = str(area or "hk").lower()
-    label = AREA_NAMES.get(code, f"{code.upper()} 游戏专线")
-    return f"{label} · {code.upper()}"
+    return AREA_NAMES.get(code, code.upper())
 
 
 def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str, dict, bool]:
