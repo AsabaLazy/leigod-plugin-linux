@@ -789,10 +789,10 @@
           <div class="acct-info">
             <div style="display: flex; align-items: center; gap: 2.25rem;">
               <span class="strip-label">雷神账号时长</span>
-              <span id="acct-badge" class="pill warn"><span id="acct-badge-text">未配置 Token</span></span>
+              <span id="acct-badge" class="pill"><span id="acct-badge-text">同步中</span></span>
             </div>
-            <div class="acct-time" id="acct-time-text">点击右上角“账号与设置”配置 Token</div>
-            <div class="acct-sub" id="acct-sub-text">账号: 未登录</div>
+            <div class="acct-time" id="acct-time-text">--</div>
+            <div class="acct-sub" id="acct-sub-text">账号: --</div>
           </div>
           <div class="nav-actions">
             <button id="acct-toggle-btn" class="btn-sm" onclick="recoverAccountTime()">恢复时长</button>
@@ -1135,6 +1135,16 @@
       await refreshAll();
     }
 
+    try {
+      const cachedAcct = JSON.parse(localStorage.getItem('leigod_acct_cache') || 'null');
+      if (cachedAcct && cachedAcct.time) {
+        document.getElementById('acct-badge').className = cachedAcct.badgeClass || 'pill ok';
+        document.getElementById('acct-badge-text').textContent = cachedAcct.badgeText || '已暂停';
+        document.getElementById('acct-time-text').textContent = cachedAcct.time;
+        document.getElementById('acct-sub-text').textContent = cachedAcct.sub || '';
+      }
+    } catch (_) {}
+
     async function loadAccountStatus() {
       try {
         const resp = await fetch('/api/account/status');
@@ -1151,8 +1161,10 @@
           badge.className = 'pill warn';
           badgeText.textContent = '未配置 Token';
           timeEl.textContent = '点击右上角“账号与设置”配置 Token';
+          subEl.textContent = '账号: 未登录';
           toggleBtn.textContent = '配置 Token';
           toggleBtn.onclick = () => document.getElementById('settings-dialog').showModal();
+          localStorage.removeItem('leigod_acct_cache');
           return;
         }
         const r = data.response || {};
@@ -1169,6 +1181,14 @@
           subEl.textContent = `账号: ${d.nickname || d.mobile || '已认证'}`;
           toggleBtn.textContent = paused ? '恢复时长' : '暂停时长';
           toggleBtn.onclick = paused ? recoverAccountTime : pauseAccountTime;
+          try {
+            localStorage.setItem('leigod_acct_cache', JSON.stringify({
+              badgeClass: badge.className,
+              badgeText: badgeText.textContent,
+              time: timeEl.textContent,
+              sub: subEl.textContent
+            }));
+          } catch (_) {}
         } else {
           badge.className = 'pill err';
           badgeText.textContent = 'Token 过期';

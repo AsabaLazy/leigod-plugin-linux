@@ -204,6 +204,19 @@ def format_region_title(area: str) -> str:
     return AREA_NAMES.get(code, code.upper())
 
 
+def detect_gateway_ip() -> str:
+    try:
+        res = subprocess.run(["ip", "route", "show", "default"], capture_output=True, text=True, timeout=2)
+        parts = res.stdout.split()
+        if "via" in parts:
+            idx = parts.index("via")
+            if idx + 1 < len(parts):
+                return parts[idx + 1].strip()
+    except Exception:
+        pass
+    return ""
+
+
 def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str, dict, bool]:
     """Disable all local telemetry/reporting in conf except tunnel heartbeat ('heart') and merge rules."""
     try:
@@ -247,6 +260,14 @@ def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str,
             ipdata_cfg["path"] = xdb_path
             modified = True
 
+    srv_cfg = parsed.get("server")
+    if isinstance(srv_cfg, dict):
+        gw = detect_gateway_ip()
+        want_dns = [f"{gw}:53", "223.5.5.5:53", "114.114.114.114:53"] if gw else ["223.5.5.5:53", "114.114.114.114:53"]
+        if srv_cfg.get("dns") != want_dns:
+            srv_cfg["dns"] = want_dns
+            modified = True
+
     game_cfg = parsed.get("game")
     is_auto = isinstance(game_cfg, dict) and str(game_cfg.get("area") or "").lower() == "auto"
     if isinstance(game_cfg, dict):
@@ -255,15 +276,11 @@ def sanitize_acc_conf(conf_input, extra_rules: list | None = None) -> tuple[str,
             game_cfg["dyn_line"] = want_dyn
             modified = True
 
-    if is_auto:
-        target_rules = [
-            {"host": ["geo:cn"], "serv": ["direct"]},
-        ]
-    else:
-        target_rules = [
-            {"host": ["geo:cn"], "serv": ["direct"]},
-            {"host": ["geo:cn!"], "serv": ["default"]},
-        ]
+    # Use game-whitelist mode (pcipwhite.txt + pcdomainwhite.txt) instead of geo:cn! global hijack
+    # so soft-router Fake-IP (198.18.0.0/15) and non-game traffic go direct to the LAN gateway.
+    target_rules = [
+        {"host": ["geo:cn"], "serv": ["direct"]},
+    ]
     if parsed.get("rules") != target_rules:
         parsed["rules"] = target_rules
         modified = True
