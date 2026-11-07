@@ -802,7 +802,7 @@
 
         <article class="matte-card account-card">
           <div class="acct-info">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 2.25rem;">
               <span class="strip-label">雷神账号时长</span>
               <span id="acct-badge" class="pill warn"><span id="acct-badge-text">未配置 Token</span></span>
             </div>
@@ -1174,7 +1174,7 @@
           const hours = Math.floor(sec / 3600);
           const mins = Math.floor((sec % 3600) / 60);
           badge.className = paused ? 'pill ok' : 'pill warn';
-          badgeText.textContent = paused ? '已暂停 (不扣费)' : '计时消耗中';
+          badgeText.textContent = paused ? '已暂停' : '计时中';
           timeEl.textContent = sec > 0 ? `剩余 ${hours} 小时 ${mins} 分` : (d.expiry_time || '已登录');
           subEl.textContent = `账号: ${d.nickname || d.mobile || '已认证'} · 关机自动暂停已开启`;
           toggleBtn.textContent = paused ? '恢复时长' : '暂停时长';
