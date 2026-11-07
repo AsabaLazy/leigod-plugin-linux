@@ -337,8 +337,8 @@
     select option {
       display: flex;
       align-items: safe center;
-      justify-content: space-between;
-      gap: 0.65rem;
+      justify-content: flex-start;
+      gap: 0.5rem;
       padding-block: 0.46rem;
       padding-inline: 0.65rem;
       border-radius: 6px;
@@ -347,6 +347,7 @@
       color: var(--text);
       background-color: transparent;
       cursor: pointer;
+      text-align: start;
       transition: background-color 0.12s ease;
     }
 
@@ -418,8 +419,8 @@
     .custom-opt {
       display: flex;
       align-items: safe center;
-      justify-content: space-between;
-      gap: 0.65rem;
+      justify-content: flex-start;
+      gap: 0.5rem;
       padding-block: 0.46rem;
       padding-inline: 0.65rem;
       border-radius: 6px;
@@ -740,8 +741,7 @@
       <!-- Left: Status Core -->
       <article class="matte-card hero-core">
         <div class="hero-status-info">
-          <span class="hero-eyebrow" id="hero-eyebrow">选择下方区服并点击启动加速</span>
-          <h1 class="hero-headline" id="stat-acc">待机就绪</h1>
+          <h1 class="hero-headline" id="stat-acc">待加速</h1>
         </div>
 
         <div class="hero-metrics-strip">
@@ -988,7 +988,6 @@
         if (Array.isArray(list) && list.length > 0) {
           const activeItem = list.find(item => Number(item.accState) === 1 || Number(item.state) === 1 || item.accState === 'started');
           const accEl = document.getElementById('stat-acc');
-          const eyeEl = document.getElementById('hero-eyebrow');
           const mainBtn = document.getElementById('hero-main-btn');
           if (activeItem) {
             isAccelerating = true;
@@ -997,13 +996,11 @@
             const matchProf = savedProfiles.find(p => String(p.area || '').toUpperCase() === area);
             const gName = matchProf ? matchProf.name : area;
             accEl.textContent = `${gName} · 加速中`;
-            eyeEl.textContent = 'TUN 透明加速运行中';
             mainBtn.textContent = '停止加速并暂停时长';
           } else {
             isAccelerating = false;
             activeAreaCode = '';
-            accEl.textContent = '待机就绪';
-            eyeEl.textContent = '选择下方区服并点击启动加速';
+            accEl.textContent = '待加速';
             mainBtn.textContent = '启动加速';
           }
           renderProfiles(savedProfiles);
