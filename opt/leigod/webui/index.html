@@ -1109,13 +1109,9 @@
         return;
       }
 
-      sel.innerHTML = (supportsBaseSelect ? `<button class="select-trigger"><selectedcontent></selectedcontent></button>` : '') + savedProfiles.map((p, idx) => {
+      sel.innerHTML = savedProfiles.map((p, idx) => {
         const cleanTitle = escapeHtml(p.name || p.id);
-        const nodes = Number(p.nodeCount || 6);
-        if (supportsBaseSelect) {
-          return `<option value="${idx}"><span>${cleanTitle}</span><span class="opt-nodes"> ${nodes} 节点</span></option>`;
-        }
-        return `<option value="${idx}">${cleanTitle} (${nodes} 节点)</option>`;
+        return `<option value="${idx}">${cleanTitle}</option>`;
       }).join('');
 
       let targetIdx = 0;
@@ -1132,12 +1128,8 @@
       if (menu && !supportsBaseSelect) {
         menu.innerHTML = savedProfiles.map((p, idx) => {
           const cleanTitle = escapeHtml(p.name || p.id);
-          const nodes = Number(p.nodeCount || 6);
           const isSel = idx === targetIdx;
-          return `<button type="button" role="option" aria-selected="${isSel}" class="custom-opt${isSel ? ' selected' : ''}" onclick="selectCustomRegion(${idx})">
-            <span>${cleanTitle}</span>
-            <span class="opt-nodes">${nodes} 节点</span>
-          </button>`;
+          return `<button type="button" role="option" aria-selected="${isSel}" class="custom-opt${isSel ? ' selected' : ''}" onclick="selectCustomRegion(${idx})">${cleanTitle}</button>`;
         }).join('');
       }
     }
