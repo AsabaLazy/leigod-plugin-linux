@@ -807,7 +807,7 @@
               <span id="acct-badge" class="pill warn"><span id="acct-badge-text">未配置 Token</span></span>
             </div>
             <div class="acct-time" id="acct-time-text">点击右上角“账号与设置”配置 Token</div>
-            <div class="acct-sub" id="acct-sub-text">已启用：关机 / 停止服务时自动暂停账号时长</div>
+            <div class="acct-sub" id="acct-sub-text">账号: 未登录</div>
           </div>
           <div class="nav-actions">
             <button id="acct-toggle-btn" class="btn-sm" onclick="recoverAccountTime()">恢复时长</button>
@@ -1176,7 +1176,7 @@
           badge.className = paused ? 'pill ok' : 'pill warn';
           badgeText.textContent = paused ? '已暂停' : '计时中';
           timeEl.textContent = sec > 0 ? `剩余 ${hours} 小时 ${mins} 分` : (d.expiry_time || '已登录');
-          subEl.textContent = `账号: ${d.nickname || d.mobile || '已认证'} · 关机自动暂停已开启`;
+          subEl.textContent = `账号: ${d.nickname || d.mobile || '已认证'}`;
           toggleBtn.textContent = paused ? '恢复时长' : '暂停时长';
           toggleBtn.onclick = paused ? recoverAccountTime : pauseAccountTime;
         } else {
