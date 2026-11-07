@@ -820,7 +820,7 @@
   <!-- Settings & Debug Modal Dialog (Light-Dismiss enabled per modern-web-guidance) -->
   <dialog id="settings-dialog" closedby="any" aria-labelledby="settings-title">
     <div class="dialog-head">
-      <h2 id="settings-title">账号凭证、系统维护与调试控制台</h2>
+      <h2 id="settings-title">账号与系统设置</h2>
       <form method="dialog" style="margin: 0;">
         <button type="submit" class="btn-sm">关闭 (Esc)</button>
       </form>
@@ -845,60 +845,14 @@
     </div>
 
     <div class="dialog-section">
-      <h3>2. 宿主机网卡、防火墙与底层隧道维护</h3>
-      <div class="hero-meta-pills" style="margin-block-end: 0.75rem;">
-        <span class="mono-tag" id="stat-tun">未创建</span>
-        <span class="mono-tag" id="stat-mac">02:da:32:db:9c:75</span>
-        <span class="mono-tag" id="stat-fw">mangle 规则净空</span>
-      </div>
-      <div class="form-grid">
-        <label>
-          设备插件 Token (accelerator.ini)
-          <input id="token-input" type="text" placeholder="自动读取">
-        </label>
-        <label>
-          User ID
-          <input id="userid-input" type="text" placeholder="自动读取">
-        </label>
-      </div>
+      <h3>2. 守护服务与网络维护</h3>
+      <input id="token-input" type="hidden">
+      <input id="userid-input" type="hidden">
       <div class="nav-actions">
-        <button class="btn-sm" onclick="sendCmd('RESUMEACC', { token: getToken(), catalogs: [2] })">恢复隧道</button>
-        <button class="btn-sm" onclick="sendCmd('PAUSEACC', { token: getToken(), catalogs: [2] })">暂停隧道</button>
-        <button class="btn-sm" onclick="sendCmd('STOPACC', { token: getToken(), catalogs: [2] })">断开隧道</button>
         <button class="btn-sm" onclick="restartPluginService()">重启守护服务</button>
-        <button class="btn-sm" onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复绑定</button>
-        <button class="btn-sm btn-danger" onclick="cleanupNetRules()">清理防火墙规则</button>
+        <button class="btn-sm" onclick="sendCmd('AUTOREPAIRBOUND', { rToken: getToken(), userId: getUserId() })">修复设备绑定</button>
+        <button class="btn-sm btn-danger" onclick="cleanupNetRules()">清理残留防火墙规则</button>
       </div>
-    </div>
-
-    <div class="dialog-section">
-      <h3>3. 原生指令 JSON 调试台</h3>
-      <div class="form-grid">
-        <label>
-          指令 (`cmd`)
-          <select id="debug-cmd" onchange="fillSamplePayload()">
-            <option value="GETROUTERINFO">GETROUTERINFO (设备与绑定信息)</option>
-            <option value="GETACCINFO">GETACCINFO (加速延迟与丢包)</option>
-            <option value="GETDEVICELIST">GETDEVICELIST (加速通道状态)</option>
-            <option value="GETNETWORKSTATE">GETNETWORKSTATE (网络状态检测)</option>
-            <option value="DIAGNOSEACCENGINE">DIAGNOSEACCENGINE (诊断加速进程)</option>
-            <option value="DIAGNOSEINTERNET">DIAGNOSEINTERNET (Ping 诊断外网)</option>
-            <option value="PONG">PONG (心跳测试)</option>
-            <option value="PAUSEACC">PAUSEACC (暂停加速)</option>
-            <option value="RESUMEACC">RESUMEACC (恢复加速)</option>
-            <option value="STOPACC">STOPACC (停止加速)</option>
-          </select>
-        </label>
-        <label>
-          参数 JSON (`data`)
-          <input id="debug-data" type="text" value="{}">
-        </label>
-      </div>
-      <div class="nav-actions">
-        <button class="btn-primary btn-sm" onclick="sendDebugCmd()">发送调试指令</button>
-        <button class="btn-sm" onclick="document.getElementById('log-output').textContent = ''">清空日志</button>
-      </div>
-      <pre id="log-output">等待指令响应...</pre>
     </div>
   </dialog>
 
@@ -970,12 +924,7 @@
       document.getElementById('spark-area').setAttribute('d', `M0,64 L${pts.join(' L')} L300,64 Z`);
     }
 
-    function appendLog(title, obj) {
-      const pre = document.getElementById('log-output');
-      const time = new Date().toLocaleTimeString();
-      const text = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
-      pre.textContent = `[${time}] ${title}\n${text}\n\n` + pre.textContent.slice(0, 10000);
-    }
+    function appendLog() {}
 
     function parseDataField(data) {
       if (typeof data === 'string' && (data.startsWith('{') || data.startsWith('['))) {
@@ -1024,7 +973,6 @@
 
       if (cmd === 'GETROUTERINFO' || cmd === 'GETINFO' || cmd === 'ROUTERINFO') {
         const info = d.routerInfo || d;
-        if (info.mac) document.getElementById('stat-mac').textContent = info.mac;
         if (info.appver) document.getElementById('nav-sub').textContent = `Jupiter · v${info.appver}`;
         if (info.token && !info.token.startsWith('<') && !getToken()) {
           document.getElementById('token-input').value = info.token;
@@ -1341,10 +1289,7 @@
           svcText.textContent = `服务异常 (${info.service_state || '停止'})`;
           svcBadge.className = 'pill err';
         }
-        if (info.mac) document.getElementById('stat-mac').textContent = info.mac;
-        if (info.tun_interface) document.getElementById('stat-tun').textContent = info.tun_interface;
         if (info.udp_6066) document.getElementById('stat-udp6066').textContent = info.udp_6066;
-        document.getElementById('stat-fw').textContent = info.has_gameacc_chain ? 'mangle 0x102 已挂载' : 'mangle 规则净空';
         if (info.version) document.getElementById('nav-sub').textContent = `Jupiter · v${info.version}`;
         if (info.token && !getToken()) document.getElementById('token-input').value = info.token;
         if (info.user_id && !getUserId()) document.getElementById('userid-input').value = info.user_id;
@@ -1373,37 +1318,6 @@
           renderProfiles(info.profiles);
         }
       } catch (_) {}
-    }
-
-    function fillSamplePayload() {
-      const cmd = document.getElementById('debug-cmd').value;
-      const token = getToken();
-      const samples = {
-        GETROUTERINFO: {},
-        GETACCINFO: { token },
-        GETDEVICELIST: { token },
-        GETNETWORKSTATE: { token },
-        DIAGNOSEACCENGINE: {},
-        DIAGNOSEINTERNET: {},
-        PONG: {},
-        PAUSEACC: { token, catalogs: [2] },
-        RESUMEACC: { token, catalogs: [2] },
-        STOPACC: { token, catalogs: [2] }
-      };
-      document.getElementById('debug-data').value = JSON.stringify(samples[cmd] || {});
-    }
-
-    function sendDebugCmd() {
-      const cmd = document.getElementById('debug-cmd').value;
-      let dataObj = {};
-      try {
-        dataObj = JSON.parse(document.getElementById('debug-data').value || '{}');
-      } catch (e) {
-        appendLog('JSON 格式错误', String(e));
-        showToast('JSON 格式错误');
-        return;
-      }
-      sendCmd(cmd, dataObj, false);
     }
 
     async function pollTick() {
