@@ -746,15 +746,15 @@
 
         <div class="hero-metrics-strip">
           <div class="strip-item">
-            <span class="strip-label">专线节点延迟</span>
+            <span class="strip-label">节点延迟</span>
             <span class="strip-val" id="stat-delay">- ms</span>
           </div>
           <div class="strip-item">
-            <span class="strip-label">通道丢包率</span>
+            <span class="strip-label">丢包率</span>
             <span class="strip-val" id="stat-loss">0 %</span>
           </div>
           <div class="strip-item">
-            <span class="strip-label">外网探测状态</span>
+            <span class="strip-label">外网连接状态</span>
             <span class="strip-val" id="stat-netstate">连通正常</span>
           </div>
         </div>
@@ -762,7 +762,7 @@
         <div class="hero-actions">
           <div class="custom-select-wrap" id="region-select-wrap">
             <select id="region-select" name="region" class="region-select" aria-label="选择加速区服" onchange="onRegionSelectChange()">
-              <option value="0">全球智能分流 · AUTO</option>
+              <option value="0">全球智能分流</option>
             </select>
             <div id="custom-region-menu" class="custom-select-menu" role="listbox" aria-label="选择加速区服" hidden></div>
           </div>
@@ -776,11 +776,11 @@
           <div class="telemetry-top">
             <div class="speed-pair">
               <div class="speed-block">
-                <span class="speed-dir">下行速率 (RX)</span>
+                <span class="speed-dir">下行速率</span>
                 <span class="speed-num" id="speed-down">0 B/s</span>
               </div>
               <div class="speed-block">
-                <span class="speed-dir">上行速率 (TX)</span>
+                <span class="speed-dir">上行速率</span>
                 <span class="speed-num" id="speed-up">0 B/s</span>
               </div>
             </div>
@@ -795,7 +795,7 @@
           </div>
 
           <div class="telemetry-foot">
-            <span id="stat-traffic">累计: RX 0 B / TX 0 B</span>
+            <span id="stat-traffic">累计: 下行 0 B / 上行 0 B</span>
             <span id="stat-udp6066">监听正常 (6066/udp)</span>
           </div>
         </article>
@@ -1312,7 +1312,7 @@
           if (info.traffic_iface) {
             document.getElementById('traffic-iface-tag').textContent = info.traffic_iface;
           }
-          document.getElementById('stat-traffic').textContent = `累计: RX ${formatBytes(rx)} / TX ${formatBytes(tx)}`;
+          document.getElementById('stat-traffic').textContent = `累计: 下行 ${formatBytes(rx)} / 上行 ${formatBytes(tx)}`;
         }
         if (Array.isArray(info.profiles)) {
           renderProfiles(info.profiles);
