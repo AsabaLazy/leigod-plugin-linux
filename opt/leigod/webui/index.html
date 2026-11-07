@@ -1307,8 +1307,14 @@
       } catch (_) {}
     }
 
+    let pollTicks = 0;
+
     async function pollTick() {
+      pollTicks++;
       await loadHostStatus();
+      if (pollTicks % 30 === 0) {
+        loadAccountStatus();
+      }
       const token = getToken();
       if (token) {
         await sendCmd('GETACCINFO', { token }, true);
