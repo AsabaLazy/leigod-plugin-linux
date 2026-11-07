@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- MANDATORY: Declare support for both light and dark themes -->
   <meta name="color-scheme" content="light dark">
-  <title>LEIGOD — 游戏加速控制台</title>
+  <title>leigod-linux</title>
   <style>
     :root {
       /* Official www.leigod.com (--ls-color-*) neutral carbon & functional tokens */
@@ -723,8 +723,8 @@
     <header class="navbar">
       <div class="brand">
         <div class="brand-text">
-          <span class="brand-name">LEIGOD STEAMOS</span>
-          <span class="brand-sub" id="nav-sub">Jupiter · v1.3.0.02</span>
+          <span class="brand-name">leigod-linux</span>
+          <span class="brand-sub" id="nav-sub">v1.3.0.02</span>
         </div>
         <span id="svc-badge" class="pill ok">
           <span id="svc-badge-text">守护运行中</span>
@@ -973,7 +973,7 @@
 
       if (cmd === 'GETROUTERINFO' || cmd === 'GETINFO' || cmd === 'ROUTERINFO') {
         const info = d.routerInfo || d;
-        if (info.appver) document.getElementById('nav-sub').textContent = `Jupiter · v${info.appver}`;
+        if (info.appver) document.getElementById('nav-sub').textContent = `v${info.appver}`;
         if (info.token && !info.token.startsWith('<') && !getToken()) {
           document.getElementById('token-input').value = info.token;
         }
@@ -1287,7 +1287,7 @@
           svcBadge.className = 'pill err';
         }
         if (info.udp_6066) document.getElementById('stat-udp6066').textContent = info.udp_6066;
-        if (info.version) document.getElementById('nav-sub').textContent = `Jupiter · v${info.version}`;
+        if (info.version) document.getElementById('nav-sub').textContent = `v${info.version}`;
         if (info.token && !getToken()) document.getElementById('token-input').value = info.token;
         if (info.user_id && !getUserId()) document.getElementById('userid-input').value = info.user_id;
 

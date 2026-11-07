@@ -1,4 +1,4 @@
-# Leigod Plugin — SteamDeck 网络加速器 | 通用 Linux 移植版
+# leigod-linux — 雷神加速器 Linux 透明加速客户端与控制台
 
 [雷神加速器](https://www.leigod.com) 的 SteamDeck 插件兼容层，面向使用 systemd 的、
 可变更系统分区的 **x86_64 Linux**。通过外部环境模拟 SteamDeck 硬件后，可使用手机
